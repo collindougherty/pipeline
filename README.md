@@ -14,4 +14,4 @@ Contributions and collaboration are welcomed.
 
 ## How to Cite
 Please cite this repository if it was useful for your research:
-Collin Dougherty. (2023). pipeline Version 1.0.0
+Collin Dougherty. (2023). pipeline Version 1.0

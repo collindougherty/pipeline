@@ -15,3 +15,6 @@ Contributions and collaboration are welcomed.
 ## How to Cite
 Please cite this repository if it was useful for your research:
 Collin Dougherty. (2023). pipeline Version 1.0
+
+## Credits
+Thanks to [@Augersam](https://github.com/augersam) for extensive work on [NCDBRecode](https://github.com/augersam/NCDBRecode), which I have extensively used here as a submodule to recode NCDB variables, with some updates reflecting 2016 to 2020 changes.

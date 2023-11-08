@@ -2062,9 +2062,10 @@ NCDBTableOne <- function(df){
 
 
 
-ncdb_rename <- function(df){
+ncdb_rename <- function(df) {
   df <- df %>%
-  rename(case_id = PUF_CASE_ID,
-       facility = PUF_FACILITY_ID,
-       type_of_facility = FACILITY_TYPE_CD)
+    rename(case_id = PUF_CASE_ID,
+           facility = PUF_FACILITY_ID,
+           type_of_facility = FACILITY_TYPE_CD)
+  return(df)
 }

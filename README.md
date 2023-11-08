@@ -28,4 +28,4 @@ Collin Dougherty. (2023). pipeline Version 1.0
 Download this repository to your device or access at the following [url.]() - note to self, use flask app to make interface simple.
 
 ## Credits
-Thanks to [@Augersam](https://github.com/augersam) for extensive work on [NCDBRecode](https://github.com/augersam/NCDBRecode), which I have extensively used here as a submodule to recode NCDB variables, with some updates reflecting 2016 to 2020 changes.
+Thanks to [@Augersam](https://github.com/augersam) for extensive work on [NCDBRecode](https://github.com/augersam/NCDBRecode), which I have  used here as a submodule to recode NCDB variables, with extensive updates reflecting 2016 to 2020 changes in the PUF, as well as stylistic preference changes.

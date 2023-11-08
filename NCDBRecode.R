@@ -522,15 +522,7 @@ df$HISTOLOGY
 #########################################
 
 
-
-
-
-
-
-  #DIAGNOSTIC CONFIRMATION
-  # Records the most definitive method of diagnostic confirmation of the cancer being
-  # reported at any time in the patient's history.
-
+#########################################
   df$DIAGNOSTIC_CONFIRMATION <-
     factor(
       df$DIAGNOSTIC_CONFIRMATION,
@@ -547,126 +539,82 @@ df$HISTOLOGY
         "A statement of malignancy was reported in the medical record" #A statement of malignancy was reported in the medical record, but there is no statement of how the cancer was diagnosed (usually Class of Case 3)
       )
     )
-
-  # NOT DONE - Separate out categorical from continuous, batch continuous into groups, factor all.
-  ### REGIONAL_NODES_POSITIVE
-  # Records the exact number of regional lymph nodes examined by the pathologist
-  # and found to contain metastases.
-  # df$REGIONAL_NODES_POSITIVE <-
-  #   factor(
-  #     df$REGIONAL_NODES_POSITIVE,
-  #     levels = c(00,90,95,97,98,99),
-  #     labels = c(
-  #       "00-All nodes examined are negative.",
-  #       "1-89 or more nodes are positive.",
-  #       "90 - 90 or more nodes positive"
-  #       "95-Positive aspiration of lymph node(s) was performed.",
-  #       "97-Positive nodes are documented, but the number is unspecified.",
-  #       "98-No nodes were examined.",
-  #       "99-It is unknown whether nodes are positive; not applicable; not stated in patient record.",
-  #       )
-  #   )
-
-  # df$NODES_POSITIVE <- NA
-  # for (i in 1:length(df$REGIONAL_NODES_POSITIVE)) {
-  #   tryCatch({
-  #     df$NODES_POSITIVE[i] <-
-  #       nodeCount(df$REGIONAL_NODES_POSITIVE[i])
-  #   }, error = function(error_message) {
-  #     return(NULL)
-  #   })
-  # }
-  #
-  #
-  # df$NODES_POSITIVE <-
-  #   factor(
-  #     df$NODES_POSITIVE,
-  #     levels = c(0, 1, 2, 3, 4, 5, 6, 8, 9, 10),
-  #     labels = c(
-  #       "0",
-  #       "1",
-  #       "2-5",
-  #       "6-20",
-  #       "21-89",
-  #       "90 or more",
-  #       "Positive aspiration was performed",
-  #       "Positive nodes, # unspecified",
-  #       "No nodes examined",
-  #       "Unknown"
-  #     )
-  #   )
+#########################################
 
 
-  # 1 = 1
-  # 2 = 2-5
-  # 3 = 6-94
-  # 4 = >21
-  # 5 = FNA performed
-  #       - 0-89 = # of nodes examined
-  #       - 90 = 90+ nodes examined
-  #       - 95 = FNA performed
-  #       - blank = unknown
-
-  ### REGIONAL_NODES_EXAMINED
-  # Records the total number of regional lymph nodes that were removed and
-  # examined by the pathologist.
-  # df$REGIONAL_NODES_EXAMINED <-
-  #   factor(
-  #     df$REGIONAL_NODES_EXAMINED,
-  #     levels = c(00,90,95,97,98,99),
-  #     labels = c(
-  # "00-No nodes were examined.",
-  # "01-89 -1-89 nodes were examined.",
-  # "90-90 or more nodes were examined.",
-  # "95-No regional nodes were removed, but aspiration of regional nodes was performed.",
-  # "96-Regional lymph node removal was documented as a sampling, and the number of nodes is unknown/not stated.",
-  # "97-Regional lymph node removal was documented as a dissection, and the number of nodes is unknown/not stated.",
-  # "98-Regional lymph nodes surgically removed but number not documented, not documented as sampling or dissection.",
-  # "99-Unknown if regional nodes"
-  #       )
-  #   )
-
-  # for (i in 1:length(df$REGIONAL_NODES_EXAMINED)) {
-  #   tryCatch({
-  #     df$NODES_EXAMINED[i] <-
-  #       nodeCount(df$REGIONAL_NODES_EXAMINED[i])
-  #   }, error = function(error_message) {
-  #     return(NULL)
-  #   })
-  # }
-  #
-  # df$NODES_EXAMINED <-
-  #   factor(
-  #     df$NODES_EXAMINED,
-  #     levels = c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-  #     labels = c(
-  #       "0",
-  #       "1",
-  #       "2-5",
-  #       "6-20",
-  #       "21-89",
-  #       "90 or more",
-  #       "Aspiration was performed",
-  #       "Nodes sampled, # unspecified",
-  #       "Nodes dissected, # unspecified",
-  #       "Nodes removed but # not documented",
-  #       "Unknown"
-  #     )
-  #   )
-
-  #STAGE OF DISEASE####
+#########################################
+  df$REGIONAL_NODES_EXAMINED <-
+    # when 95, 96, 97, 98, or 99 make NA
+    ifelse(df$REGIONAL_NODES_EXAMINED %in% c(95, 96, 97, 98, 99), NA, df$REGIONAL_NODES_EXAMINED)
+#########################################
 
 
-  #DX_STAGING_PROC_DAYS
-  # The number of days between the date of diagnosis (NAACCR Item #390) and the
-  # date the surgical diagnostic and/or staging procedure was performed (NAACCR
-  # Item #1280). This item is only available for diagnosis years 2003 and later.
+#########################################
+  df$REGIONAL_NODES_EXAMINED_notes <- 
+  ifelse(df$REGIONAL_NODES_EXAMINED %in% c(95), "No regional nodes removed, but aspiration or core biopsy of regional nodes was performed",
+          ifelse(df$REGIONAL_NODES_EXAMINED %in% c(96), "Regional lymph node removal was documented as sampling, and the number of nodes is unknown/not stated",
+                ifelse(df$REGIONAL_NODES_EXAMINED %in% c(97), "Regional lymph node removal was documented as dissection, and the number of nodes is unknown/notstated",
+                        ifelse(df$REGIONAL_NODES_EXAMINED %in% c(98), "Regional lymph nodes surgically removed but number of lymph nodes unknown or not stated, and not documented as sampling or dissection; nodes were examined, but the number is unknown",
+                              ifelse(df$REGIONAL_NODES_EXAMINED %in% c(99), "Unknown if regional nodes examined. Not applicable or negative. Not stated in patient record.", NA)))))
+#########################################
 
 
+#########################################
+  df$REGIONAL_NODES_POSITIVE <-
+    # when 95, 97, 98, or 99 make NA
+    ifelse(df$REGIONAL_NODES_POSITIVE %in% c(95, 97, 98, 99), NA, df$REGIONAL_NODES_POSITIVE)
+#########################################
 
-  #RX_SUMM_DXSTG_PROC
-  # Records the type of surgical diagnostic and/or staging procedure performed.
 
+#########################################
+  df$REGIONAL_NODES_POSITIVE_notes <-
+  ifelse(df$REGIONAL_NODES_POSITIVE %in% c(95), "Positive aspiration or core biopsy of lymph node(s)",
+          ifelse(df$REGIONAL_NODES_POSITIVE %in% c(97), "Positive nodes are documented, but the number are unspecified",
+                ifelse(df$REGIONAL_NODES_POSITIVE %in% c(98), "No nodes examined",
+                        ifelse(df$REGIONAL_NODES_POSITIVE %in% c(99), "It is unknown whether nodes are positive; not applicable; not stated in patient record", NA))))
+#########################################
+
+
+#########################################
+  df$SLN_EXAM <- 
+  ifelse(df$SLN_EXAM %in% c(95,98,99), NA, SLN_EXAM)
+#########################################
+
+
+#########################################
+  df$SLN_POS <-
+  ifelse(df$SLN_POS %in% c(95,97,98,99), NA, SLN_POS)
+#########################################
+
+
+#########################################
+  df$SLN_EXAM_notes <-
+  ifelse(df$SLN_EXAM %in% c(95), "No sentinel nodes were removed, but aspiration of sentinel node(s) was performed",
+          ifelse(df$SLN_EXAM %in% c(98), "Sentinel lymph nodes were biopsied, but the number is unknown",
+                ifelse(df$SLN_EXAM %in% c(99), "It is unknown whether sentinel nodes were examined; not applicable or negative; not stated in patient record", NA)))
+#########################################
+
+
+#########################################
+  df$SLN_POS_notes <-
+  ifelse(df$SLN_POS %in% c(95), "Positive aspiration of sentinel lymph node(s) was performed",
+          ifelse(df$SLN_POS %in% c(97), "Positive sentinel nodes are documented, but the number is unspecified",
+                ifelse(df$SLN_POS %in% c(98), "No sentinel nodes were biopsied",
+                        ifelse(df$SLN_POS %in% c(99), "It is unknown whether sentinel nodes are positive; not applicable; not stated in patient record", NA))))
+#########################################
+
+
+#########################################
+  df$SENTINEL_LNBX_STARTED_DAY
+#########################################
+
+
+#########################################
+  df$REG_LN_DISS_STARTED_DAY
+#########################################
+
+
+#########################################
   df$RX_SUMM_DXSTG_PROC <-
     factor(
       df$RX_SUMM_DXSTG_PROC,
@@ -674,7 +622,7 @@ df$HISTOLOGY
       labels = c(
         "No surgical diagnosis or staging performed",
         "Biopsy done to site other than primary",
-        "Biopsy done to the primary done",
+        "Biopsy done to the primary site",
         "Surgical exploration only, no biopsy or treatment",
         "Surgical procedure with bypass, no biopsy",
         "Exploratory procedure with biopsy of primary or other site",
@@ -682,14 +630,10 @@ df$HISTOLOGY
         "No information on diagnosis or staging"
       )
     )
+#########################################
 
 
-
-  # RX_HOSP_DXSTG_PROC
-  # Records the type of surgical diagnostic and/or staging procedure performed at the reporting facility.
-  # This data item was added to the 2015 PUF (data released in Fall 2017),
-  # and does not appear in prior versions of the PUF data.
-
+#########################################
   df$RX_HOSP_DXSTG_PROC <-
     factor(
       as.numeric(df$RX_HOSP_DXSTG_PROC),
@@ -706,14 +650,15 @@ df$HISTOLOGY
         "No information of whether a diagnostic or staging procedure was performed"
       )
     )
+#########################################
 
 
+#########################################
+  df$DX_STAGING_PROC_DAYS
+#########################################
 
-  #TNM_CLIN_T
-  # Identifies the clinically determined size and/or extension of the primary tumor (cT)
-  # as defined by the American Joint Committee on Cancer (AJCC).
 
-  #Remove white space from TNM variables
+#########################################
   df$TNM_CLIN_T <- trimws(df$TNM_CLIN_T, which = c("both", "left", "right"), whitespace = "[ \t\r\n]")
   df$TNM_CLIN_N <- trimws(df$TNM_CLIN_N, which = c("both", "left", "right"), whitespace = "[ \t\r\n]")
   df$TNM_CLIN_M <- trimws(df$TNM_CLIN_M, which = c("both", "left", "right"), whitespace = "[ \t\r\n]")
@@ -835,13 +780,11 @@ df$HISTOLOGY
                  "T4e",
                  "cIs or similar")
     )
+#########################################
 
 
 
-  #TNM_CLIN_N
-  # Identifies the clinically determined absence or presence of regional lymph node
-  # (cN) metastasis and describes the extent of the regional lymph node metastasis as
-  # defined by the American Joint Committee on Cancer (AJCC).
+#########################################
   df$TNM_CLIN_N <-
     factor(
       df$TNM_CLIN_N,
@@ -923,12 +866,10 @@ df$HISTOLOGY
                  "N3",
                  "N4")
     )
+#########################################
 
 
-
-  #TNM_CLIN_M
-  # # Identifies the clinically determined absence or presence of distant metastasis (cM)
-  # # as defined by the American Joint Committee on Cancer (AJCC).
+#########################################
   df$TNM_CLIN_M <-
     factor(
       df$TNM_CLIN_M,
@@ -964,12 +905,10 @@ df$HISTOLOGY
                  "M1"
       )
     )
+#########################################
 
 
-
-  #TNM_CLIN_STAGE_GROUP - AJCC Clinical Stage Group
-  # Identifies the applicable stage group based on the T, N, and M elements as defined
-  # by the American Joint Committee on Cancer (AJCC).
+#########################################
   df$TNM_CLIN_STAGE_GROUP <-
     factor(
       df$TNM_CLIN_STAGE_GROUP,
@@ -1068,16 +1007,10 @@ df$HISTOLOGY
                  "Occult",
                  "Not applicable/Unknown")
     )
+#########################################
 
 
-
-
-
-
-  #TNM_PATH_T - AJCC Pathologic T
-  # Identifies the pathologically-determined tumor size and/or extension (pT) as
-  # defined by the American Joint Committee on Cancer (AJCC)
-
+#########################################
   df$TNM_PATH_T <-
     factor(
       df$TNM_PATH_T,
@@ -1188,14 +1121,10 @@ df$HISTOLOGY
                  "T4e",
                  "cIs or similar")
     )
+#########################################
 
 
-
-  #TNM_PATH_N - AJCC Pathologic N
-  # Identifies the pathologically-determined absence or presence or extent of regional
-  # lymph node (pN) metastasis as defined by the American Joint Committee on
-  # Cancer (AJCC)
-
+#########################################
   df$TNM_PATH_N <-
     factor(
       df$TNM_PATH_N,
@@ -1273,13 +1202,11 @@ df$HISTOLOGY
                  "N3",
                  "N4")
     )
+#########################################
 
 
 
-  #TNM_PATH_M - AJCC Pathologic M
-  # Identifies the pathologically determined tumor size and/or extension (pT) as
-  # defined by the American Joint Committee on Cancer (AJCC)
-
+#########################################
   df$TNM_PATH_M <-
     factor(
       df$TNM_PATH_M,
@@ -1322,12 +1249,10 @@ df$HISTOLOGY
                  "M1"
       )
     )
+#########################################
 
 
-  #TNM_PATH_STAGE_GROUP
-  # Identifies the pathologically-determined anatomic extent of disease based on the T,
-  # N, and M elements as defined by the American Joint Committee on Cancer (AJCC).
-
+#########################################
   df$TNM_PATH_STAGE_GROUP <-
     factor(
       df$TNM_PATH_STAGE_GROUP,
@@ -1425,13 +1350,11 @@ df$HISTOLOGY
                  "Occult",
                  "Not applicable/Unknown")
     )
+#########################################
 
 
 
-  #TNM_EDITION_NUMBER
-  # Identifies the edition number of the AJCC Cancer Staging Manual used to stage the
-  # case
-
+#########################################
   df$TNM_EDITION_NUMBER <-
     factor(
       df$TNM_EDITION_NUMBER,
@@ -1452,16 +1375,10 @@ df$HISTOLOGY
         "Staged, edition unknown" #prior to the 5th edition
       )
     )
+#########################################
 
 
-
-
-  #ANALYTIC_STAGE_GROUP
-  # Analytic Stage Group is assigned the value of reported Pathologic Stage Group.
-  # Clinical Stage Group is used if pathologic stage is not reported. Sub-stage groups
-  # are collapsed into the corresponding general stage designation. The alphanumeric
-  # representation of stage group is provided for ease of display
-
+#########################################
   df$ANALYTIC_STAGE_GROUP <-
     factor(
       df$ANALYTIC_STAGE_GROUP,
@@ -1477,12 +1394,10 @@ df$HISTOLOGY
         "AJCC Stage group unknown"
       )
     )
+#########################################
 
 
-  ### CS_METS_DX_BONE - CS Mets at DX-Bone
-  # Identifies whether there is metastatic involvement of distant site(s) at the time of
-  # diagnosis
-
+#########################################
   df$METS_AT_DX_BONE <-
     factor(
       df$CS_METS_DX_BONE,
@@ -1494,13 +1409,10 @@ df$HISTOLOGY
         "Unknown" # whether bone is involved; Not documented in patient record
       )
     )
+#########################################
 
 
-
-  #METS_AT_DX_BRAIN
-  # Identifies the presence of distant metastatic involvement of the bone at the time of
-  # diagnosis
-
+#########################################
   df$METS_AT_DX_BRAIN <-
     factor(
       df$METS_AT_DX_BRAIN,
@@ -1512,12 +1424,10 @@ df$HISTOLOGY
         "Unknown" # unknown  whether brain is involved; Not documented in patient record
       )
     )
+#########################################
 
 
-  #METS_AT_DX_LIVER
-  # Identifies the presence of distant metastatic involvement of the liver at the time of
-  # diagnosis
-
+#########################################
   df$METS_AT_DX_LIVER <-
     factor(
       df$CS_METS_DX_LIVER,
@@ -1529,13 +1439,10 @@ df$HISTOLOGY
         "Unknown" # whether liver is involved; Not documented in patient record
       )
     )
+#########################################
 
 
-
-  #METS_AT_DX_LUNG
-  # Identifies the presence of distant metastatic involvement of the lung at the time of
-  # diagnosis
-
+#########################################
   df$METS_AT_DX_LUNG <-
     factor(
       df$METS_AT_DX_LUNG,
@@ -1547,30 +1454,10 @@ df$HISTOLOGY
         "Unknown" # whether lung is involved; Not documented in patient record
       )
     )
+#########################################
 
 
-  #METS_AT_DX_DISTANT_LN
-  # identifies whether distant lymph node(s) are an involved metastatic site.
-
-  df$METS_AT_DX_DISTANT_LN <-
-    factor(
-      df$METS_AT_DX_DISTANT_LN,
-      levels = c(0, 1, 8, 9),
-      labels = c(
-        "None", # no distant LN metastases
-        "Yes",
-        "Not applicable",
-        "Unknown" # whether distant LN are involved; Not documented in patient record
-      )
-    )
-
-
-
-  #METS_AT_DX_OTHER
-  # This data item identifies whether other metastatic involvement, other than bone, brain,
-  #liver, lung or distant lymph nodes exists. Some examples include but are not limited to
-  #the adrenal gland, bone marrow, pleura, peritoneum, and skin. T
-
+#########################################
   df$METS_AT_DX_OTHER <-
     factor(
       df$METS_AT_DX_OTHER,
@@ -1583,6 +1470,26 @@ df$HISTOLOGY
         "Unknown" # whether other metastatic site is involved; Not documented in patient record
       )
     )
+#########################################
+
+
+#########################################
+  df$METS_AT_DX_DISTANT_LN <-
+    factor(
+      df$METS_AT_DX_DISTANT_LN,
+      levels = c(0, 1, 8, 9),
+      labels = c(
+        "None", # no distant LN metastases
+        "Yes",
+        "Not applicable",
+        "Unknown" # whether distant LN are involved; Not documented in patient record
+      )
+    )
+#########################################
+
+
+
+
 
 
   #CS_EXTENSION
@@ -2152,103 +2059,8 @@ NCDBTableOne <- function(df){
   tableOne
 
 }
-NCDBOS <- function(df){
-  # Make survival object
-  survObject <-
-    Surv(time = df$DX_LASTCONTACT_DEATH_MONTHS,
-         event = df$RECODED_STATUS)
-
-  # Plot overall survival curve
-  fit <-
-    survfit(survObject ~ 1, data = df, conf.type = "log-log")
-  # plot <- ggsurvplot(
-  #   fit,
-  #   data = df,
-  #   risk.table = FALSE,
-  #   pval = FALSE,
-  #   conf.int = TRUE,
-  #   xlab = "Months Follow-up",
-  #   ylab = "Percent Alive",
-  #   censor = FALSE,
-  #   legend.title = ,
-  #   #legend.labs = strataLabels,
-  #   legend = "top",
-  #   #title = "Kaplan-Meier Overall Survival",
-  #   font.title = 12,
-  #   font.x = 10,
-  #   font.y = 10,
-  #   linetype = c(1:10),
-  #   palette = gray(0:8 / 8))
-
-    fit
-}
-NCDBGroupAge <- function(df){
-  # break ages into bins
-  #loop through rows and run the ageCalculation function
-  # function to sort into age groups
-  df$AGE_GROUP <- NA
-  df$AGE_GROUP<-cut(
-    as.numeric(df$AGE),
-    breaks = c(-1,50,60,70, Inf),
-    labels = c(
-      "<50 years",
-      "50-60 years",
-      "60-70 years",
-      ">70 years"
-  ))
 
 
-  df
-
-}
-NCDB_NodeGrouping <- function(df){
-# group nodes for analysis as categorical variable
-df$REGIONAL_NODES_EXAMINED_GROUPED <- NA
-df$REGIONAL_NODES_POSITIVE_GROUPED <- NA
-
-df$REGIONAL_NODES_EXAMINED_GROUPED<-cut(
-  as.numeric(df$REGIONAL_NODES_EXAMINED),
-  breaks = c(-1, 20, 50, 89, 90,95,96, 97,98,99),
-  right = TRUE,
-  labels = c(
-     "0-20 nodes",
-     "21-50 nodes",
-     "51-89 nodes",
-     ">=90 nodes",
-     "No regional nodes removed, aspiration performed",
-     "Documented as sampling, number unknown",
-     "Documented as dissection, number unknown",
-     "Nodes surgically removed, number not documented",
-     "Unknown if regional nodes examined"
-
-   )
-)
-
-df$REGIONAL_NODES_POSITIVE_GROUPED<-cut(
-  as.numeric(df$REGIONAL_NODES_POSITIVE),
-  breaks = c(-1, 0, 1, 5, 10, 20, 90,95,96, 97,98,99),
-  right = TRUE,
-  labels = c(
-    "All examined nodes are negative",
-    "1 node positive",
-    "2-5 nodes positive",
-    "6-10 nodes positive",
-    "11-20 nodes positive",
-    "21-90 nodes positive",
-    "90+ nodes positive",
-    "Positive aspiration of nodes performed",
-    "Positive nodes documented, number unspecified",
-    "No nodes examined",
-    "Unknown whether nodes are positive"
-
-  )
- )
-
-
-}
-NCDB_MissingData <- function(df){
-
-}
 
 ncdb_rename <- function(df){
   df <- df %>%

@@ -15,7 +15,7 @@ A simple web-app which allows non-statistically or technologically sophisticated
 ## Collaboration
 Contributions and collaboration are welcomed.
 
-Currently active problems:
+#### Currently active problems:
 - Review of NCDBRecode.R to ensure accuracy according to 2020 PUF data dictionary
 - Need for specific variables to be encoded; SEQUENCE_NUMBER, PRIMARY_SITE, HISTOLOGY, Grade_Clin, Grade_Path, Grade_Path_Post
 - NCDB provides an encrypted PUF SAS file to begin with, need to build in the back-end which converts raw file to csv with user only inputting the NCDB provided encryption password

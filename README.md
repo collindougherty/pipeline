@@ -10,11 +10,19 @@ neural networks (ie matrices of 1s and 0s) or random forests. All data is preser
 
 The following is based on the 2020 NCDB PUF data dictionary, found here: https://www.facs.org/media/brilfbgu/puf-2020-data-dictionary.pdf
 
+## Collaboration
 Contributions and collaboration are welcomed.
+
+Currently active problems:
+- Review of NCDBRecode.R to ensure accuracy according to 2020 PUF data dictionary
+- Need for specific variables to be encoded; SEQUENCE_NUMBER, PRIMARY_SITE, HISTOLOGY, Grade_Clin, Grade_Path, Grade_Path_Post
 
 ## How to Cite
 Please cite this repository if it was useful for your research:
 Collin Dougherty. (2023). pipeline Version 1.0
+
+## How to Use
+Download this repository to your device or access at the following [url.]() - note to self, use flask app to make interface simple.
 
 ## Credits
 Thanks to [@Augersam](https://github.com/augersam) for extensive work on [NCDBRecode](https://github.com/augersam/NCDBRecode), which I have extensively used here as a submodule to recode NCDB variables, with some updates reflecting 2016 to 2020 changes.

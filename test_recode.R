@@ -5,6 +5,9 @@ source("/Users/collindougherty/Documents/Work/pipeline/NCDBRecode.R")
 puf_data <- read.csv("/Users/collindougherty/Downloads/Desmoplastic Melanoma.csv")
 
 # recode the data
-recoded_data <- NCDBRecode(puf_data)
+recoded_data <- ncdb_recode(puf_data)
 
-print(head(recoded_data))
+recoded_data_head <- head(recoded_data)
+
+# write to csv
+write.csv(recoded_data_head, "/Users/collindougherty/Documents/Work/pipeline/test_recode.csv", row.names = FALSE)

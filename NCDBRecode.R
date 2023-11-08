@@ -1,61 +1,24 @@
-#' National Cancer Database Recode Project
-#'
-#' This package serves to recode the standard NCDB excel or stata .sav file for ease of survival analysis
-#' @export
-#' 
-
-library(labelled)
+# import libraries
 library(dplyr)
 
-NCDBClean <- function(df){
-  #no longer removing cases with no survival info
-  df
-}
-NCDBRecode <- function(df) {
-  #PATIENT DEMOGRAPHICS####
-
-  # PUF_CASE_ID - Unique case identification number assigned to the case in the PUF.
-  # NCDB assigned value that uniquely identifies each case included in the PUF. The value
-  # assigned to each case is selected at random, and the value assigned to each case will
-  # change with each issued PUF. The PUF Case IDs are not the same across cancer sites, and
-  # cases cannot be linked across cancer sites.
-  # Note that the length of this key was expanded from 10 to 37 in January 2014.
-
+ncdb_recode <- function(df) {
+#########################################
   df$PUF_CASE_ID
+#########################################
 
-  # PUF_FACULTY_ID - The facility reporting the case to the NCDB. Codes are anonymized. The facility
-  # random IDs are assigned regardless of cancer site, so you may identify the same
-  # facilities across cancer sites.
 
-  # Make sure `PUF_FACILITY_ID` is a factor if it isn't already
+#########################################
   df$PUF_FACILITY_ID <- as.factor(df$PUF_FACILITY_ID)
 
-  # Create a named vector to map old codes to new
-  code_dict <- setNames(paste0("Facility ", seq_along(levels(df$PUF_FACILITY_ID))), levels(df$PUF_FACILITY_ID))
+  code_dict <- setNames(paste0("Facility ",
+  seq_along(levels(df$PUF_FACILITY_ID))),
+  levels(df$PUF_FACILITY_ID))
 
-  # Create new 'Facility' column
   df$Facility <- code_dict[df$PUF_FACILITY_ID]
+#########################################
 
-  # FACILITY_TYPE_CD
-  # Each facility reporting cases to the NCDB is assigned a category classification by
-  # the Commission on Cancer Accreditation program. This item provides a general
-  # classification of the structural characteristics of each reporting facility.
-  # Analytic Note: For additional information about CoC accreditation categories
-  # see https://www.facs.org/quality-programs/cancer/accredited/about/categories.
-  # Please note that for hospitals who are categorized as Integrated Network Cancer
-  # Programs, there is no information in the PUF data as to when these facilities
-  # became part of a Network. Some facilities may have been in a Network throughout
-  # the time period in the PUF, whereas others may have only recently become part of
-  # a Network. Additionally, facilities designated in the Network category could
-  # previously been assigned a different category before joining their Network, such as
-  # Community, Academic, etc. Keep this in mind when analyzing facility type data, as
-  # Networks are comprised of several different types of facilities, but are only
-  # classified as Integrated Network Cancer Program in the PUF data. The hospital
-  # category in the PUF only represents the current designation of the facility.
-  # See Data De-identification and Confidentiality for a description of the handling of
-  # some categories. Please note that VA/DoD facilities are not included in the PUF
-  # files, and therefore are not identifiable as a type of cancer program
 
+#########################################
   df$FACILITY_TYPE_CD <-
     factor(
       df$FACILITY_TYPE_CD,
@@ -67,11 +30,10 @@ NCDBRecode <- function(df) {
         "Integrated Network Cancer Program"
       )
     )
+#########################################
 
-  var_label(df$FACILITY_TYPE_CD) <- "Facility Type"
 
-  #FACILITY_LOCATION_CD
-  # The US Census Division of the reporting facility
+#########################################
   df$FACILITY_LOCATION_CD <-
     factor(
       df$FACILITY_LOCATION_CD,
@@ -88,12 +50,10 @@ NCDBRecode <- function(df) {
         "Pacific"
       )
     )
+#########################################
 
-  var_label(df$FACILITY_LOCATION_CD) <- "Facility Location"
 
-  #PUF_MULTI_SOURCE
-  # Identifies whether there was more than one CoC facility that submitted a report for this case to NCDB.
-
+#########################################
   df$PUF_MULT_SOURCE <-
     factor(
       df$PUF_MULT_SOURCE,
@@ -103,57 +63,23 @@ NCDBRecode <- function(df) {
         'Records pertaining to this case submitted to NCDB by more than one CoC facility'
       )
     )
+#########################################
 
-  var_label(df$PUF_MULT_SOURCE) <- "Patient Treated in More than One CoC Facility"
 
-  #REFERENCE_DATE_FLAG
-  # Identifies whether a report for a case has a diagnosis date before or after the facility's reference date.
-  # NOTE:
-  # Every facility has a reference date, from which they are accountable for the completeness of the data for cases
-  # diagnosed in that year through the present. Since a facility may request to move their reference date forward,
-  # there are some instances where a case’s diagnosis year falls before the facility’s reference date. This item is
-  # coded 0 in cases where this occurs. A 1 signifies cases where the diagnosis year is on or after the reference
-  # date year. Reports for cases whose diagnosis date is prior to the reference date cannot be changed or updated by
-  # the facility. For this reason, PUF researchers may choose to omit cases where the diagnosis date precedes the
-  # reference date, depending on the nature of the study.
-
-  # df$PUF_REFERENCE_DATE_FLAG <-
-  #   factor(
-  #     df$REFERENCE_DATE_FLAG,
-  #     levels = c(0, 1),
-  #     labels = c(
-  #       'Diagnosis date before reference date',
-  #       'Diagnosis date on or after reference date'
-  #     )
-  #   )
-
-  # var_label(df$PUF_REFERENCE_DATE_FLAG) <- "Reference Date Flag"
-
-  #AGE
-  # Records the age of the patient at his or her last birthday before diagnosis.
-  # make age 999 into NA
+#########################################
   df$AGE[df$AGE == 999] <- NA 
+#########################################
 
-  #AGE_GROUP
-  # declare a categorical variable to use with NCDBGroupAge
-  df$AGE_GROUP <- NA
-  NCDBGroupAge(df$AGE)
 
-  #SEX
-  # Identifies the sex of the patient
-
+#########################################
   df$SEX <-
     factor(df$SEX,
            levels = c(1, 2),
            labels = c("Male", "Female"))
+#########################################
 
-  var_label(df$SEX) <- "Sex"
 
-  #RACE
-  # Identifies the primary race of the person
-  # Race is analyzed with Spanish/Hispanic Origin (NAACCR Item #190).
-  # Both items must be recorded. All tumors for the same patient should have the same race code.
-
+#########################################
   df$RACE <-
     factor(
       df$RACE,
@@ -191,14 +117,10 @@ NCDBRecode <- function(df) {
         "Unknown"
       )
     )
-  var_label(df$RACE) <- "Race"
+#########################################
 
-  #SPANISH_HISPANIC_ORIGIN
-  # Persons of Spanish or Hispanic origin may be of any race, but these categories are generally not
-  # used for Native Americans, Filipinos, or others who may have Spanish names.
-  # Code 0 (Non-Spanish; non-Hispanic) for Portuguese and Brazilian persons. If the patient has multiple tumors,
-  # all records should have the same code.
 
+#########################################
   df$SPANISH_HISPANIC_ORIGIN <-
     factor(
       df$SPANISH_HISPANIC_ORIGIN,
@@ -216,12 +138,10 @@ NCDBRecode <- function(df) {
         "Unknown whether Spanish or not; not stated in patient record"
       )
     )
+#########################################
 
-  var_label(df$SPANISH_HISPANIC_ORIGIN) <- "Spanish Origin"
 
-  #INSURANCE_STATUS
-  # Identifies the patient's primary insurance carrier at the time of initial diagnosis
-  # and/or treatment.
+#########################################
   df$INSURANCE_STATUS <-
     factor(
       df$INSURANCE_STATUS,
@@ -235,31 +155,62 @@ NCDBRecode <- function(df) {
         "Insurance Status unknown"
       )
     )
+#########################################
 
-  var_label(df$INSURANCE_STATUS) <- "Primary Payer"
 
-  #MEDICAID_EXPN_CODE
-  # Reference: https://www.medicaid.gov/medicaid/program- information/downloads/december-2015-enrollment-report.pdf
-
-  df$MEDICAID_EXPN_CODE <-
+#########################################
+  df$NO_HSD_QUAR_00 <-
     factor(
-      df$PUF_MEDICAID_EXPN_CODE,
-      levels = c(0, 1, 2, 3, 9),
-      labels = c("Non-Expansion States",
-                 "January 2014 Expansion States",
-                 "Early Expansion States (2010 - 2013)",
-                 "Late Expansion States (after Jan 2014)",
-                 "Suppressed for Ages 0-39")
+      df$NO_HSD_QUAR_00,
+      levels = c(1, 2, 3, 4),
+      labels = c("29% or more",
+                 "20% - 28.9%",
+                 "14% - 19.9%",
+                 "Less than 14%")
     )
+#########################################
 
-  var_label(df$PUF_MEDICAID_EXPN_CODE) <- "Medicaid Expansion Status State Group"
+
+#########################################
+  df$NO_HSD_QUAR_12 <-
+    factor(
+      df$NO_HSD_QUAR_12,
+      levels = c(1, 2, 3, 4),
+      labels = c("21% or more",
+                 "13%-20.9%",
+                 "7%-12.9%",
+                 "Less than 7%")
+    )
+#########################################
 
 
-  #MED_INC_QUAR_00
-  # Median household income for each patient's area of residence is estimated by
-  # matching the zip code of the patient recorded at the time of diagnosis against files
-  # derived from year 2000 US Census data. Household income is categorized as
-  # quartiles based on equally proportioned income ranges among all US zip codes.
+#########################################
+  df$NO_HSD_QUAR_2016 <-
+    factor(
+      df$NO_HSD_QUAR_2016,
+      levels = c(1, 2, 3, 4),
+      labels = c("17.6% or more",
+                 "10.9% - 17.5%",
+                 "6.3% - 10.8%",
+                 "Less than 6.3%")
+    )
+#########################################
+
+
+#########################################
+  df$NO_HSD_QUAR_2020 <-
+    factor(
+      df$NO_HSD_QUAR_2020,
+      levels = c(1, 2, 3, 4),
+      labels = c("15.3% or more",
+                 "9.1% - 15.2%",
+                 "5.0% - 9.0%",
+                 "Less than 5.0%")
+    )
+#########################################
+
+
+#########################################
   df$MED_INC_QUAR_00 <-
     factor(
       df$MED_INC_QUAR_00,
@@ -271,48 +222,53 @@ NCDBRecode <- function(df) {
         "$46,000 or more"
       )
     )
+#########################################
 
-  var_label(df$MED_INC_QUAR_00) <- "Income 2000"
 
-  ### NO_HSD_QUAR_00
-  # This measure of educational attainment for each patient's area of residence is
-  # estimated by matching the zip code of the patient recorded at the time of diagnosis
-  # against files derived from year 2000 US Census data. This item provides a
-  # measure of the number of adults in the patient's zip code who did not graduate
-  # from high school, and is categorized as equally proportioned quartiles among all
-  # US zip codes
-
-  df$NO_HSD_QUAR_00 <-
+#########################################
+  df$MED_INC_QUAR_12 <-
     factor(
-      df$NO_HSD_QUAR_00,
+      df$MED_INC_QUAR_12,
       levels = c(1, 2, 3, 4),
-      labels = c("29% or more",
-                 "20% - 28.9%",
-                 "14% - 19.9%",
-                 "Less than 14%")
+      labels = c(
+        "Less than $38,000",
+        "$38,000-$47,999",
+        "$48,000-$62,999",
+        "$63,000 or more"
+      )
     )
+#########################################
 
-  var_label(df$NO_HSD_QUAR_00) <- "Education 2000"
+
+#########################################
+  df$MED_INC_QUAR_2016 <-
+    factor(
+      df$MED_INC_QUAR_2016,
+      levels = c(1, 2, 3, 4),
+      labels = c(
+        "Less than $40,227",
+        "$40,227 - $50,353",
+        "$50,354 - $63,332",
+        "63,333+")
+    )
+#########################################
 
 
-  #UR_CD_2003
-  # Area-based measure of rurality and urban influence, using the typology published
-  # by the USDA Economic Research Service.
-  # Analytic Note:
-  #   This item was estimated by matching the state and county FIPS code of the patient
-  # recorded at the time of diagnosis against 2003 files published by the United States
-  # Department of Agriculture Economic Research Service
-  # (http://www.ers.usda.gov/data-products/rural-urban-continuum-codes).
-  # Rural-Urban continuum codes form a classification scheme that distinguishes
-  # metropolitan (metro) counties by the population size of their metro area, and
-  # nonmetropolitan (nonmetro) counties by degree of urbanization and adjacency to a
-  # metro area or areas. The metro and nonmetro categories have been subdivided
-  # into three metro and six nonmetro groupings, resulting in a nine-part county
-  # codification. The codes allow researchers working with data to break such data into
-  # finer residential groups beyond a simple metro-nonmetro dichotomy, particularly for
-  # the analysis of trends in nonmetro areas that may be related to degree of rurality
-  # and metro proximity.
+#########################################
+  df$MED_INC_QUAR_2020 <-
+    factor(
+      df$MED_INC_QUAR_2020,
+      levels = c(1, 2, 3, 4),
+      labels = c(
+        "Less than $46,277",
+        "$46,277 - $57,856",
+        "$57,857 - $74,062",
+        "$74,063+")
+    )
+#########################################
 
+
+#########################################
   df$UR_CD_03 <-
     factor(
       df$UR_CD_03,
@@ -333,98 +289,10 @@ NCDBRecode <- function(df) {
 
       )
     )
-
-  var_label(df$UR_CD_03) <- "Urban/Rural 2003"
-
-  #MED_INC_QUAR_12
-  # Median household income for each patient's area of residence is estimated by
-  # matching the zip code of the patient recorded at the time of diagnosis against files
-  # derived from the 2012 American Community Survey data, spanning years 2008
-  # 2012 and adjusted for 2012 inflation. Household income is categorized as quartiles
-  # based on equally proportioned income ranges among all US zip codes. Due to
-  # differences in collection methodology, comparisons with Census 2000 income data
-  # should be done with caution. See
-  # https://www.census.gov/acs/www/guidance_for_data_users/comparing_2012/ for
-  # more information.
-
-  df$MED_INC_QUAR_12 <-
-    factor(
-      df$MED_INC_QUAR_12,
-      levels = c(1, 2, 3, 4),
-      labels = c(
-        "Less than $38,000",
-        "$38,000-$47,999",
-        "$48,000-$62,999",
-        "$63,000 or more"
-      )
-    )
-
-  var_label(df$MED_INC_QUAR_12) <- "Income 2008-2012"
+#########################################
 
 
-  #NO_HSD_QUAR_12
-  # This measure of educational attainment for each patient's area of residence is
-  # estimated by matching the zip code of the patient recorded at the time of diagnosis
-  # against files derived from the 2012 American Community Survey data, spanning
-  # years 2008-2012. This item provides a measure of the number of adults in the
-  # patient's zip code who did not graduate from high school, and is categorized as
-  # equally proportioned quartiles among all US zip codes. Comparisons with Census
-  # 2000 education data may be done. See
-  # https://www.census.gov/acs/www/guidance_for_data_users/comparing_2012/ for
-  # more information.
-  df$NO_HSD_QUAR_12 <-
-    factor(
-      df$NO_HSD_QUAR_12,
-      levels = c(1, 2, 3, 4),
-      labels = c("21% or more",
-                 "13%-20.9%",
-                 "7%-12.9%",
-                 "Less than 7%")
-    )
-  var_label(df$NO_HSD_QUAR_12) <- "Education 2008-2012"
-
-  #MED_INC_QUAR_2016
-  # Median household income for each patient's area of residence is estimated by matching
-  # the zip code of the patient recorded at the time of diagnosis against files derived from
-  # the 2016 American Community Survey data, spanning years 2012-2016 and adjusted for 2016 inflation.
-  # Household income is categorized as quartiles based on equally proportioned income ranges
-  # among all US zip codes.
-
-  df$MED_INC_QUAR_2016 <-
-    factor(
-      df$MED_INC_QUAR_2016,
-      levels = c(1, 2, 3, 4),
-      labels = c(
-        "Less than $40,227",
-        "$40,227 - $50,353",
-        "$50,354 - $63,332",
-        "63,333+")
-    )
-  var_label(df$MED_INC_QUAR_2016) <- "Income 2012-2016"
-
-
-  #UR_CD_03
-  # Area-based measure of rurality and urban influence, using the typology published
-  # by the USDA Economic Research Service.
-  # Analytic Note:
-  #   This item was estimated by matching the state and county FIPS code of the patient
-  # recorded at the time of diagnosis against 2013 files published by the United States
-  # Department of Agriculture Economic Research Service
-  # (http://www.ers.usda.gov/data-products/rural-urban-continuum-codes).
-  # Rural-Urban continuum codes form a classification scheme that distinguishes
-  # metropolitan (metro) counties by the population size of their metro area, and
-  # nonmetropolitan (nonmetro) counties by degree of urbanization and adjacency to a
-  # metro area or areas. The metro and nonmetro categories have been subdivided
-  # into three metro and six nonmetro groupings, resulting in a nine-part county
-  # codification. The codes allow researchers working with data to break such data into
-  # finer residential groups beyond a simple metro-nonmetro dichotomy, particularly for
-  # the analysis of trends in nonmetro areas that may be related to degree of rurality
-  # and metro proximity.
-  # Since labels for the 2013 classification codes are the same as the 2003 labels, a
-  # direct comparison with the 2003 Urban/Rural codes may be made.
-
-  #This data is newer and slightly more complete than the 03 variable
-
+#########################################
   df$UR_CD_13 <-
     factor(
       df$UR_CD_13,
@@ -442,12 +310,12 @@ NCDBRecode <- function(df) {
         # Rural Counties
         "Completely rural or less than 2,500 urban population, adjacent to a metro area",
         "Completely rural or less than 2,500 urban population, not adjacent to a metro area"
-
       )
     )
+#########################################
 
-  var_label(df$UR_CD_03) <- "Urban/Rural 2013"
 
+#########################################
   #URBAN_RURAL
   # Calculated column to group the UR_CD_13 values by Metro/Urban/Rural
   df$URBAN_RURAL <- NA
@@ -475,61 +343,29 @@ NCDBRecode <- function(df) {
                  "Urban",
                  "Rural")
     )
+#########################################
 
-  var_label(df$URBAN_RURAL) <- "Rurality"
 
-  #NO_HSD_QUAR_2016
-  # This measure of educational attainment for each patient's area of residence is estimated
-  # by matching the zip code of the patient recorded at the time of diagnosis against files derived
-  # from the 2016 American Community Survey data, spanning years 2012-2016. This item provides a
-  # measure of the number of adults age 25 or older in the patient's zip code who did not graduate
-  # from high school, and is categorized as equally proportioned quartiles among all US zip codes.
-
-  df$NO_HSD_QUAR_2016 <-
+#########################################
+  df$PUF_MEDICAID_EXPN_CODE <-
     factor(
-      df$NO_HSD_QUAR_2016,
-      levels = c(1, 2, 3, 4),
-      labels = c("17.6% or more",
-                 "10.9% - 17.5%",
-                 "6.3% - 10.8%",
-                 "Less than 6.3%")
+      df$PUF_MEDICAID_EXPN_CODE,
+      levels = c(0, 1, 2, 3, 9),
+      labels = c("Non-Expansion States",
+                 "January 2014 Expansion States",
+                 "Early Expansion States (2010 - 2013)",
+                 "Late Expansion States (after Jan 2014)",
+                 "Suppressed for Ages 0-39")
     )
-  var_label(df$NO_HSD_QUAR_2016) <- "Education 2012-2016"
+#########################################
 
-  #CROWFLY
-  # The "great circle" distance in miles between the patient's residence and the hospital that reported the case.
-  # Analytic Note:  Residential latitude and longitude are based on the patient's zip code centroid or on
-  # the city if the zip code was not available. Hospital locations are based on the street address for the
-  # facility. The great circle distance is calculated between those two points. In some instances, the
-  # residential city is outside of the United States, so the upper bound of distance may be quite large.
-  # A distance of 0 can result when the patient lives in the same zip code where the facility is located.
 
+#########################################
   df$CROWFLY
+#########################################
 
-  var_label(df$CROWFLY) <- "Great Circle Distance"
 
-
-  #CDCC_TOTAL_BEST
-  # Comorbid conditions as described by Charlson/Deyo (1992) [1] are mapped from as many as ten reported
-  # ICD-9-CM or ICD-10 secondary diagnosis codes. The Charlson/Deyo value is a weighted score derived from
-  # the sum of the scores for each of the comorbid conditions listed in the Charlson Comorbidity Score Mapping Table
-  # (source: http://mchp-appserv.cpe.umanitoba.ca/viewConcept.php?conceptID=109 ). The range for this value
-  # is between 0 and 25. Starting with the 2015 PUF released in the Fall of 2017, ICD-10 codes are incorporated
-  # into the score calculation for cases diagnosed in 2006-2015. Registries were able to submit ICD-10 codes
-  # starting in 2006. However, very few ICD-10 codes were submitted until 2015.
-  # The 2015 Charlson-Deyo Score is derived from the highest score that is calculated from using either
-  # the ICD-9 codes or the ICD-10 codes. The allowable values have also been extended to now include values
-  # up to 3 or more.
-  # Analytic note: Because of the small proportion of cases with a Charlson Comorbidity score exceeding 3,
-  # the data have been truncated to 0, 1, 2, 3 (greater than or equal to 3). A score of 0 indicates
-  # "no comorbid conditions recorded", or none of the values shown below. Patients with a score of 0
-  # could still have comorbidities if they are conditions that are not included in the mapping table below.
-  # Note that the patient's cancer is not directly reflected in the recorded score. Two examples illustrating
-  # how the Charlson Score is summarized for the PUF data: If a patient had a myocardial infarction, diabetes,
-  # and renal disease, the cumulative score would be 4, and the value shown in the PUF would be 3. If a patient
-  # had severe liver disease, the value in the PUF would also be 3, since the Charlson Score of severe liver
-  # disease is 3.
-
+#########################################
   df$CDCC_TOTAL_BEST <-
     factor(
       df$CDCC_TOTAL_BEST,
@@ -541,33 +377,48 @@ NCDBRecode <- function(df) {
         "Total Charlson score of 3 or more"
       )
     )
+#########################################
 
-  var_label(df$CDCC_TOTAL_BEST) <- "Charlson/Deyo Score"
 
-  #CANCER IDENTIFICATION####
-
-  #SEQUENCE_NUMBER - NOT DONE - Unsure how to manage mix of continuous and categorical
-  #Indicates the sequence of malignant and non-malignant neoplasms over the lifetime of the patient.
-
-  df$SEQUENCE_NUMBER <-
+#########################################
+  df$SARSCOV2_POS <-
     factor(
-      as.numeric(df$SEQUENCE_NUMBER),
-      levels = c(0, 1, 2, 3, 4),
+      df$SARSCOV2_POS,
+      levels = c(0, 1, 9),
       labels = c(
-        "In Situ or invasive Malignant Behavior",
-        "Benign or borderline, non-malignant behavior",
-        "Unknown",
-        "Single non-malignant primary",
-        "Sequence of benign or borderline tumor unknown"
+        "Patient did not test positive for active SARS-CoV-2: No positive test",
+        "Patient tested positive for active SARS-CoV-2; test positive on at least one test",
+        "Unknown if tested; test done, results unknown"
       )
     )
+#########################################
 
-  var_label(df$SEQUENCE_NUMBER) <- "Sequence Number"
+
+#########################################
+  df$SARSCOV2_POS_DAYS
+#########################################
 
 
-  #CLASS_OF_CASE
-  # Classifies cases recorded in the database.
+#########################################
+  df$SARSCOV2_TEST <-
+    factor(
+      df$SARSCOV2_TEST,
+      levels = c(0, 1, 9),
+      labels = c(
+        "Patient not tested for SARS-CoV-2: facility records support that patient did not undergo pre-admit or in-hospital testing",
+        "Patient tested for active SARS-CoV-2",
+        "Unknown if patient tested for SARS-CoV-2/No facility record of preadmit hospital testing of SARS-CoV-2"
+      )
+    )
+#########################################
 
+
+#########################################
+  df$SEQUENCE_NUMBER 
+#########################################
+
+
+#########################################
   df$CLASS_OF_CASE <-
     factor(
       df$CLASS_OF_CASE,
@@ -584,43 +435,20 @@ NCDBRecode <- function(df) {
         "Initial diagnosis elsewhere and all of first course treatment or a decision not to treat was done at the reporting facility."
       )
     )
+#########################################
 
-  var_label(df$CLASS_OF_CASE) <- "Class of Case"
 
-  #YEAR_OF_DIAGNOSIS
-  # Records the year of initial diagnosis by a physician for the tumor being reported.
-
+#########################################
   df$YEAR_OF_DIAGNOSIS
+#########################################
 
-  var_label(df$YEAR_OF_DIAGNOSIS) <- "Year of Diagnosis"
+
+#########################################
+  df$PRIMARY_SITE
+#########################################
 
 
-  #PRIMARY_SITE - NOT DONE
-  # Identifies the primary site, that is, the anatomic site of origin for the cancer.
-  # Record the ICD-O-3 (International Classification of Diseases for Oncology, Third
-  # Edition) topography code for the site of origin.
-
-  df$PRIMARY_SITE <-
-    factor(
-      df$PRIMARY_SITE,
-      levels = c("C300", "C310", "C311", "C312", "C313", "C318", "C319", "C301"),
-      labels = c(
-        "Nasal Cavity",
-        "Maxillary",
-        "Ethmoid",
-        "Frontal",
-        "Sphenoid",
-        "Overlapping lesion of accessory sinuses",
-        "Accessory sinus, NOS",
-        "Middle Ear"
-      )
-    )
-
-  var_label(df$PRIMARY_SITE) <- "Primary Site"
-
-  #LATERALITY
-  # Identifies the side of a paired organ or the side of the body on which the reportable
-  # tumor originated. This applies to the primary site only
+#########################################
   df$LATERALITY <-
     factor(
       df$LATERALITY,
@@ -635,32 +463,15 @@ NCDBRecode <- function(df) {
         "Paired site, but lateral origin unknown; midline tumor."
       )
     )
+#########################################
 
-  var_label(df$LATERALITY) <- "Laterality"
 
-  #HISTOLOGY
-  # Records the tumor histology of all cases reported to the NCDB in International Classification of Disease
-  # for Oncology, Third Edition (ICD-O-3) terms.
-  # Analytic Note:
-  #   This item is the product of the application of the conversion rules expressed in
-  # ICDO2-3_SEER.xls (http://seer.cancer.gov/tools/conversion/index.html) for cases
-  # diagnosed prior to 2001, which were originally coded according to ICD-O-2, and the
-  # ICD-O-3 codes reported by registries for cases diagnosed in 2001 and
-  # subsequently. In addition, beginning with 2010 diagnoses, malignant hematopoietic
-  # and lymphoid histology codes not yet printed in the ICD-O-3 were added. For a list
-  # of the added codes, consult http://seer.cancer.gov/tools/heme/; the codes are in
-  # Appendix D of the Hematopoietic and Lymphoid Manual which can be accessed
-  # from the online or downloadable database files on that site. Hematopoietic and
-  # lymphatic cancers diagnosed prior to 2010 retain the earlier ICD-O-3 values.
-  # A list of histologies and labels may be found on the online ICD-O-3 site:
-  #   (http://codes.iarc.fr/home).
+#########################################
+df$HISTOLOGY
+#########################################
 
-  var_label(df$HISTOLOGY) <- "Histology"
 
-  #BEHAVIOR
-  # Records the behavior of all cases reported to the NCDB. The fifth digit of the
-  # morphology code is the behavior code
-
+#########################################
   df$BEHAVIOR <-
     factor(
       df$BEHAVIOR,
@@ -672,19 +483,11 @@ NCDBRecode <- function(df) {
         "Invasive or microinvasive"
       )
     )
+#########################################
 
-  var_label(df$BEHAVIOR) <- "Behavior"
 
-
-  #GRADE
-  # Describes the tumor's resemblance to normal tissue. Well differentiated (Grade I) is
-  # the most like normal tissue, and undifferentiated (Grade IV) is the least like normal
-  # tissue. Code the grade or differentiation as stated in the final pathologic diagnosis.
-  # NCDBRecode note: Raw GRADE data is saved as GRADE_DESC, which is then broken out to GRADE_RECODE
-  # to simplify to low, high, other grade. GRADE_SHOT contains the same information as the raw GRADE
-  # but shorter
-
-  df$GRADE_DESC <-
+#########################################
+  df$GRADE <-
     factor(
       df$GRADE,
       levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9),
@@ -700,14 +503,14 @@ NCDBRecode <- function(df) {
         "Cell type not determined, not stated or not applicable;unknown primaries; high grade dysplasia (adenocarcinoma in situ)"
       )
     )
+#########################################
 
-  # Declare GRADE_RECODE and sort GRADE into three groups
+
+#########################################
   df$GRADE_RECODE <- NA
   df$GRADE_RECODE[df$GRADE %in% c(1, 2)] <- 0
   df$GRADE_RECODE[df$GRADE %in% c(3, 4)] <- 1
   df$GRADE_RECODE[df$GRADE %in% c(5, 6, 7, 8, 9)] <- 2
-
-  # Factor GRADE_RECODE
   df$GRADE_RECODE <-
     factor(
       df$GRADE_RECODE,
@@ -716,28 +519,12 @@ NCDBRecode <- function(df) {
                  "High (III/IV)",
                  "Other")
     )
-
-  # Declare GRADE_SHORT to maintain the detail of GRADE but more readable
-  df$GRADE_SHORT <- df$GRADE
-  df$GRADE_SHORT <-
-    factor(
-      df$GRADE_SHORT,
-      levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9),
-      labels = c( "Well differentiated",
-                  "Moderately differentiated",
-                  "Poorly differentiated",
-                  "Undifferentiated",
-                  "T cell; T-precursor",
-                  "B cell; pre-B; B-precursor",
-                  "Null cell; non T-non B",
-                  "NK (natural killer) cell (effective with diagnosis 1/1/95 and after)",
-                  "Cell type not determined, not stated or not applicable;unknown primaries; high grade dysplasia (adenocarcinoma in situ)"
-      )
-    )
+#########################################
 
 
-  var_label(df$GRADE_SHORT) <- "Grade (short)"
-  var_label(df$GRADE_RECODE) <- "Grade (recode)"
+
+
+
 
 
   #DIAGNOSTIC CONFIRMATION
@@ -875,7 +662,6 @@ NCDBRecode <- function(df) {
   # date the surgical diagnostic and/or staging procedure was performed (NAACCR
   # Item #1280). This item is only available for diagnosis years 2003 and later.
 
-  var_label(df$DX_STAGING_PROC_DAYS) <- "Diagnostic and Staging procedure, days from DX"
 
 
   #RX_SUMM_DXSTG_PROC
@@ -897,7 +683,7 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$RX_SUMM_DXSTG_PROC) <- "Diagnostic and Staging Procedure"
+
 
   # RX_HOSP_DXSTG_PROC
   # Records the type of surgical diagnostic and/or staging procedure performed at the reporting facility.
@@ -921,7 +707,7 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$RX_HOSP_DXSTG_PROC) <- "Diagnostic and Staging Procedure at This Facility"
+
 
   #TNM_CLIN_T
   # Identifies the clinically determined size and/or extension of the primary tumor (cT)
@@ -1050,7 +836,7 @@ NCDBRecode <- function(df) {
                  "cIs or similar")
     )
 
-  var_label(df$cT_RECODE) <- "Clinical T"
+
 
   #TNM_CLIN_N
   # Identifies the clinically determined absence or presence of regional lymph node
@@ -1138,7 +924,7 @@ NCDBRecode <- function(df) {
                  "N4")
     )
 
-  var_label(df$cN_RECODE) <- "Clinical N"
+
 
   #TNM_CLIN_M
   # # Identifies the clinically determined absence or presence of distant metastasis (cM)
@@ -1179,7 +965,7 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$cM_RECODE) <- "Clinical M"
+
 
   #TNM_CLIN_STAGE_GROUP - AJCC Clinical Stage Group
   # Identifies the applicable stage group based on the T, N, and M elements as defined
@@ -1259,7 +1045,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$TNM_CLIN_STAGE_GROUP) <- "AJCC Clinical Stage Group"
 
   df$cSTAGE_RECODE <- NA
   df$cSTAGE_RECODE[df$TNM_CLIN_STAGE_GROUP %in% c("cStage 0","cStage 0A","cStage 0is")] <- 0
@@ -1284,7 +1069,7 @@ NCDBRecode <- function(df) {
                  "Not applicable/Unknown")
     )
 
-  var_label(df$cSTAGE_RECODE) <- "AJCC Clincal Stage Group"
+
 
 
 
@@ -1404,7 +1189,6 @@ NCDBRecode <- function(df) {
                  "cIs or similar")
     )
 
-  var_label(df$pT_RECODE) <- "Pathologic T"
 
 
   #TNM_PATH_N - AJCC Pathologic N
@@ -1490,7 +1274,7 @@ NCDBRecode <- function(df) {
                  "N4")
     )
 
-  var_label(df$pN_RECODE) <- "Pathologic N"
+
 
   #TNM_PATH_M - AJCC Pathologic M
   # Identifies the pathologically determined tumor size and/or extension (pT) as
@@ -1539,7 +1323,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$pM_RECODE) <- "Pathologic M"
 
   #TNM_PATH_STAGE_GROUP
   # Identifies the pathologically-determined anatomic extent of disease based on the T,
@@ -1643,7 +1426,6 @@ NCDBRecode <- function(df) {
                  "Not applicable/Unknown")
     )
 
-  var_label(df$pSTAGE_RECODE) <- "AJCC Pathologic Stage Group"
 
 
   #TNM_EDITION_NUMBER
@@ -1672,7 +1454,7 @@ NCDBRecode <- function(df) {
     )
 
 
-  var_label(df$TNM_EDITION_NUMBER) <- "TNM Edition Number"
+
 
   #ANALYTIC_STAGE_GROUP
   # Analytic Stage Group is assigned the value of reported Pathologic Stage Group.
@@ -1713,7 +1495,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$METS_AT_DX_BONE) <- "Bone metastases at diagnosis"
 
 
   #METS_AT_DX_BRAIN
@@ -1732,7 +1513,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$CS_METS_DX_BRAIN) <- "Brain metastases as diagnosis"
 
   #METS_AT_DX_LIVER
   # Identifies the presence of distant metastatic involvement of the liver at the time of
@@ -1750,7 +1530,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$METS_AT_DX_LIVER) <- "Liver metastases as diagnosis"
 
 
   #METS_AT_DX_LUNG
@@ -1769,7 +1548,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$METS_AT_DX_LUNG) <- "Lung metastases as diagnosis"
 
   #METS_AT_DX_DISTANT_LN
   # identifies whether distant lymph node(s) are an involved metastatic site.
@@ -1786,7 +1564,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$METS_AT_DX_DISTANT_LN) <- "Distant LN metastases as diagnosis"
 
 
   #METS_AT_DX_OTHER
@@ -1807,7 +1584,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$METS_AT_DX_OTHER) <- "Other metastases as diagnosis"
 
   #CS_EXTENSION
   # Identifies contiguous growth (extension) of the primary tumor within the organ or origin or its direct
@@ -1844,7 +1620,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$LYMPH_VASCULAR_INVASION) <- "Lympovascular Invasion"
 
 
   ### CS_METS_AT_DX - CS Mets at DX
@@ -1867,7 +1642,6 @@ NCDBRecode <- function(df) {
   #     )
   #   )
 
-  var_label(df$CS_METS_AT_DX) <- "(CS) Metastases at diagnosis"
 
   ### CS_METS_DX_BONE - CS Mets at DX-Bone
   # Identifies whether there is metastatic involvement of distant site(s) at the time of
@@ -1885,7 +1659,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$CS_METS_DX_BONE) <- "(CS) Bone metastases at diagnosis"
 
   ### CS_METS_DX_Brain - CS Mets at DX-Brain
   # Identifies the presence of distant metastatic involvement of the bone at the time of
@@ -1903,7 +1676,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$CS_METS_DX_BRAIN) <- "(CS) Brain metastases as diagnosis"
 
   ### CS_METS_DX_Liver - CS Mets at DX-Liver
   # Identifies the presence of distant metastatic involvement of the liver at the time of
@@ -1921,7 +1693,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$CS_METS_DX_LIVER) <- "(CS) Liver metastases as diagnosis"
 
 
   ### CS_METS_DX_LUNG - CS Mets at DX-LUNG
@@ -1940,7 +1711,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$CS_METS_DX_LUNG) <- "(CS) Lung metastases as diagnosis"
 
   #CS_SITESPECIFIC_FACTORs
   # TODO: http://ncdbpuf.facs.org/?q=node/370 find way to do this
@@ -1952,7 +1722,6 @@ NCDBRecode <- function(df) {
   #TUMOR_SIZE
   # Describes the largest dimension of the diameter of the primary tumor in millimeters(mm).
 
-  var_label(df$TUMOR_SIZE) <- "Size of Tumor (mm)"
 
   #CS_VERSION_LATEST
   #This is the version number of the most recent derivation of CS data items in the record.
@@ -1975,14 +1744,12 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$RX_SUMM_TREATMENT_STATUS) <- "Treatment status"
 
   #DX_RX_STARTED_DAYS
   # The number of days between the date of diagnosis (NAACCR Item #390) and the
   # date on which treatment [surgery, radiation, systemic, or other therapy] (NAACCR
   # Item #1270) of the patient began at any facility
 
-  var_label(df$DX_RX_STARTED_DAYS) <- "Treatment started, days from diagnosis"
 
   #DX_SURG_STARTED_DAYS - First Surgical Procedure, days from dx
   # The number of days between the date of diagnosis (NAACCR Item #390) and the
@@ -1991,14 +1758,12 @@ NCDBRecode <- function(df) {
   # (NAACCR Item #1292) or other regional or distant surgery (NAACCR Item #1294).
   # Incisional biopsies are not coded as treatment surgery.
 
-  var_label(df$DX_SURG_STARTED_DAYS) <- "First surgical procedure, days from diagnosis"
 
   #DX_DEFSURG_STARTED_DAYS - Definitive Surgical Procedure, days from dx
   # The number of days between the date of diagnosis (NAACCR Item #390) and the
   # date on which the most definitive surgical procedure was performed on the primary
   # site (NAACCR Item #3170).
 
-  var_label(df$DX_DEFSURG_STARTED_DAYS) <- "Definitive Surgical Procedure, Days from Dx"
 
   #RX_SUMM_SURG_PRIM_SITE - Surgical procedure of the primary site
   # Records the surgical procedure performed to the primary site at any facility.
@@ -2017,7 +1782,6 @@ NCDBRecode <- function(df) {
       labels = c("Tumor destruction", "Tumor resection")
     )
 
-  var_label(df$RX_SUMM_SURG_PRIM_SITE) <- "Surgical procedure of primary site"
 
 
   #RX_HOSP_SURG_PRIM_SITE
@@ -2031,7 +1795,6 @@ NCDBRecode <- function(df) {
   # "98-Site-specific codes; special Special code. Refer to Surgery of the Primary Site Codes for the correct site-specific code for the procedure."
   # "99-Unknown Patient record does not state whether a surgical procedure of the primary site was performed and no information is available. Death certificate only."
 
-  var_label(df$RX_SUMM_SURG_PRIM_SITE) <- "Surgery at this Facility"
 
   #RX_HOSP_SURG_APPR_2010 - Surgical Approach ONLY USED AFTER 2010
   # This item is used to monitor patterns and trends in the adoption and utilization of
@@ -2091,7 +1854,6 @@ NCDBRecode <- function(df) {
                  "Indeterminate/NA")
     )
 
-  var_label(df$MARGINS_RECODE) <- "MARGINS (recoded)"
 
   #RX_SUMM_SCOPE_REG_LN_SUR
   # Identifies the removal, biopsy, or aspiration of regional lymph node(s) at the time of
@@ -2109,7 +1871,6 @@ NCDBRecode <- function(df) {
     )
 
 
-  var_label(df$RX_SUMM_SCOPE_REG_LN_SUR) <- "Scope of regional lymph node surgery"
 
   #RX_SUMM_SCOPE_REG_LN_2012
   # Identifies the removal, biopsy, or aspiration of regional lymph node(s) at the time of
@@ -2125,7 +1886,6 @@ NCDBRecode <- function(df) {
   #   )
 
 
-  #var_label(df$RX_SUMM_SCOPE_REG_LN_2012) <- "Scope of regional lymph node surgery"
 
 
   #RX_SUMM_SURG_OTH_REGDIS
@@ -2147,14 +1907,13 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$RX_SUMM_SURG_OTH_REGDIS) <- "Surgery at other sites"
 
   #SURG_DISCHARGE_DAYS
   # The number of days between the date the most definitive surgical procedure was
   # performed on the primary site (NAACCR Item #3170) and the date the patient was
   # discharged following primary site surgery (NAACCR Item #3180)
 
-  var_label(df$SURG_DISCHARGE_DAYS) < "Surgical Inpatient Stay, Days from Surgery"
+   (df$SURG_DISCHARGE_DAYS) < "Surgical Inpatient Stay, Days from Surgery"
 
   #READM_HOSP_30_DAYS
   # Records a readmission to the same hospital, for the same illness, within 30 days of
@@ -2173,7 +1932,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$READM_HOSP_30_DAYS) <- "Readmissions within 30 days of surgical discharge"
 
   #REASON_FOR_NO_SURGERY
   # Records the reason that no surgery was performed on the primary site.
@@ -2192,8 +1950,6 @@ NCDBRecode <- function(df) {
         "Unknown if recommended or performed" # It is unknown whether surgery of the primary site was recommended or performed. Diagnosed at autopsy or death certificate only."
       )
     )
-
-  var_label(df$REASON_FOR_NO_SURGERY) <- "Reason for no surgery"
 
 
   # Calculated field to determine if the patient had surgery
@@ -2251,7 +2007,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$SURGERY_MARGINS) <- "Margin Status"
 
   
   #PALLIATIVE_CARE
@@ -2277,7 +2032,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$PALLIATIVE_CARE) <- "Palliative care"
 
   #PALLIATIVE_CARE_HOSP
   # Identifies any care provided in an effort to palliate or alleviate symptoms at the reporting facility.
@@ -2302,7 +2056,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$PALLIATIVE_CARE_HOSP) <- "Palliative care at this facility"
 
 
 #OUTCOMES####
@@ -2322,7 +2075,6 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$PUF_30_DAY_MORT_CD) <- "30-day Mortality"
 
 
   #PUF_90_DAY_MORT_CD - Nintey day mortality
@@ -2340,14 +2092,12 @@ NCDBRecode <- function(df) {
       )
     )
 
-  var_label(df$PUF_90_DAY_MORT_CD) <- "90-day Mortality"
 
 
   #DX_LASTCONTACT_DEATH_MONTHS
   # The number of months between the date of diagnosis (NAACCR Item #390) and
   # the date on which the patient was last contacted or died (NAACCR Item #1750).
 
-  var_label(df$DX_LASTCONTACT_DEATH_MONTHS) <- "Last contact or death, months from dx"
 
   #PUF_VITAL_STATUS - PUF Vital Status
   # Records the vital status of the patient as of the date entered in Date of Last Contact
@@ -2447,7 +2197,6 @@ NCDBGroupAge <- function(df){
       ">70 years"
   ))
 
-  var_label(df$AGE_GROUP) <- "Age (grouped)"
 
   df
 

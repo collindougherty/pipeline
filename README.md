@@ -17,8 +17,9 @@ Contributions and collaboration are welcomed.
 
 #### Currently active problems:
 - Review of NCDBRecode.R to ensure accuracy according to 2020 PUF data dictionary
-- Need for specific variables to be encoded; SEQUENCE_NUMBER, PRIMARY_SITE, HISTOLOGY, Grade_Clin, Grade_Path, Grade_Path_Post 
+- Need for specific variables to be encoded; SEQUENCE_NUMBER, PRIMARY_SITE, HISTOLOGY, Grade_Clin, Grade_Path, Grade_Path_Post, CS_VERSION_ENCODED, CS_EXTENSION, CS_METS_AT_DX, CS_METS_EVAL, RX_SUMM_SURG_PRIM_SITE, 
 - NCDB provides an encrypted PUF SAS file to begin with, need to build in the back-end which converts raw file to csv with user only inputting the NCDB provided encryption password
+- Create composite variables when variable collection has been paused/replaced with newer variable purporting to measure the same thing: CS_SITE_SPECIFIC_FACTOR 1-25, 
 
 ## How to Cite
 Please cite this repository if it was useful for your research:

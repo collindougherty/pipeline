@@ -1488,33 +1488,287 @@ df$HISTOLOGY
 #########################################
 
 
+#########################################
+  df$TUMOR_SIZE_SUMMARY_2016[df$TUMOR_SIZE_SUMMARY_2016 == 999] <- NA
+  df$TUMOR_SIZE_SUMMARY_2016[df$TUMOR_SIZE_SUMMARY_2016 == 998] <- NA
+  df$TUMOR_SIZE_SUMMARY_2016[df$TUMOR_SIZE_SUMMARY_2016 == 990] <- NA
+#########################################
 
 
+#########################################
+  df$AJCC_TNM_CLIN_T
+#########################################
 
 
+#########################################
+  df$AJCC_TNM_CLIN_T_SFX <-
+  factor(
+    df$AJCC_TNM_CLIN_T_SFX,
+    levels = c("(m)", "(s)"),
+    labels = c(
+      "Multiple synchronous tumors OR Multifocal tumor",
+      "Solitary tumor"
+    )
+  )
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_CLIN_N 
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_CLIN_N_SFX <-
+  factor(
+    df$AJCC_TNM_CLIN_N_SFX,
+    levels = c("(sn)", "(f)"),
+    labels = c(
+      "Sentinel node procedure with or without FNA or core needle biopsy",
+      "FNA or core needly biopsy only"
+    )
+  )
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_CLIN_M
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_CLIN_STG_GRP
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_PATH_T
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_PATH_T_SFX <-
+  factor(
+    df$AJCC_TNM_PATH_T_SFX,
+    levels = c("(m)", "(s)"),
+    labels = c(
+      "Multiple synchronous tumors OR Multifocal tumor",
+      "Solitary tumor"
+    )
+  )
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_PATH_N
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_PATH_N_SFX <-
+  factor(
+    df$AJCC_TNM_PATH_N_SFX,
+    levels = c("(sn)", "(f)"),
+    labels = c(
+      "Sentinel node procedure with or without FNA or core needle biopsy",
+      "FNA or core needly biopsy only"
+    )
+  )
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_PATH_M
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_PATH_STG_GRP
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_POST_PATH_T
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_POST_PATH_T_SFX <-
+  factor(
+    df$AJCC_TNM_PATH_T_SFX,
+    levels = c("(m)", "(s)"),
+    labels = c(
+      "Multiple synchronous tumors OR Multifocal tumor",
+      "Solitary tumor"
+    )
+  )
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_POST_PATH_N
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_POST_PATH_N_SFX <-
+  factor(
+    df$AJCC_TNM_PATH_N_SFX,
+    levels = c("(sn)", "(f)"),
+    labels = c(
+      "Sentinel node procedure with or without FNA or core needle biopsy",
+      "FNA or core needly biopsy only"
+    )
+  )
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_POST_PATH_M
+#########################################
+
+
+#########################################
+  df$AJCC_TNM_POST_PATH_STG_GRP
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_1
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_2
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_3
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_4
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_5
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_6
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_7
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_8
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_9
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_10
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_11
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_12
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_13
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_14
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_15
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_16
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_17
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_18
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_19
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_20
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_21
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_22
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_23
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR24
+#########################################
+
+
+#########################################
+  df$CS_SITE_SPECIFIC_FACTOR_25
+#########################################
+
+
+#########################################
   #CS_EXTENSION
   # Identifies contiguous growth (extension) of the primary tumor within the organ or origin or its direct
   # extension into neighboring organs. For some sites such as ovary, discontinuous metastasis is coded in CS Extension.
   # CS extension codes are found here: http://ncdbpuf.facs.org/?q=node/370
   # TODO: create function for CS values
-
   # separate function here to decode using this http://ncdbpuf.facs.org/sites/default/files/cs/cs_head_neck_replpgs01.02.00.pdf
+#########################################
 
-  #CS_TUMOR_SIZEEXT_EVAL
-  # Records how the codes for the two items, CS Tumor Size and CS Extension were determined,
-  # based on the diagnostic methods employed.
-  # TODO: pull info from here: http://web2.facs.org/cstage0205/mouthother/MouthOther_cpa.html
 
-  ### LYMPH_VASCULAR_INVASION
-  # Indicates the presence or absence of tumor cells in lymphatic channels (not lymph
-  # nodes) or blood vessels within the primary tumor as noted microscopically by the
-  # pathologist. This data item is separate from the CS data items but is included in this
-  # manual because of its relationship to the Collaborative Stage Data Collection
-  # System. Lymph-vascular invasion is an item of interest to both pathologists and
-  # clinicians and is mentioned in many chapters of the AJCC Cancer Staging Manual,
-  # seventh edition. This field is required for mapping of T in some sites, such as testis
-  # and penis.
-
+#########################################
   df$LYMPH_VASCULAR_INVASION <-
     factor(
       df$LYMPH_VASCULAR_INVASION,
@@ -1526,9 +1780,10 @@ df$HISTOLOGY
         "Unknown" # unknown if lymph-vascular invasion is present, or indeterminant"
       )
     )
+#########################################
 
 
-
+#########################################
   ### CS_METS_AT_DX - CS Mets at DX
   # Identifies whether there is metastatic involvement of distant site(s) at the time of
   # diagnosis.
@@ -1548,12 +1803,10 @@ df$HISTOLOGY
   #       "Unknown"
   #     )
   #   )
+#########################################
 
 
-  ### CS_METS_DX_BONE - CS Mets at DX-Bone
-  # Identifies whether there is metastatic involvement of distant site(s) at the time of
-  # diagnosis
-
+#########################################
   df$CS_METS_DX_BONE <-
     factor(
       df$CS_METS_DX_BONE,
@@ -1565,29 +1818,10 @@ df$HISTOLOGY
         "Unknown" # whether bone is involved; Not documented in patient record
       )
     )
+#########################################
 
 
-  ### CS_METS_DX_Brain - CS Mets at DX-Brain
-  # Identifies the presence of distant metastatic involvement of the bone at the time of
-  # diagnosis
-
-  df$CS_METS_DX_BRAIN <-
-    factor(
-      df$CS_METS_DX_BRAIN,
-      levels = c(0, 1, 8, 9),
-      labels = c(
-        "None", # no brain metastases"
-        "Yes",
-        "Not applicable",
-        "Unknown" # unknown  whether brain is involved; Not documented in patient record
-      )
-    )
-
-
-  ### CS_METS_DX_Liver - CS Mets at DX-Liver
-  # Identifies the presence of distant metastatic involvement of the liver at the time of
-  # diagnosis
-
+#########################################
   df$CS_METS_DX_LIVER <-
     factor(
       df$CS_METS_DX_LIVER,
@@ -1599,13 +1833,10 @@ df$HISTOLOGY
         "Unknown" # whether liver is involved; Not documented in patient record
       )
     )
+#########################################
 
 
-
-  ### CS_METS_DX_LUNG - CS Mets at DX-LUNG
-  # Identifies the presence of distant metastatic involvement of the lung at the time of
-  # diagnosis
-
+#########################################
   df$CS_METS_DX_LUNG <-
     factor(
       df$CS_METS_DX_LUNG,
@@ -1617,28 +1848,37 @@ df$HISTOLOGY
         "Unknown" # whether lung is involved; Not documented in patient record
       )
     )
+#########################################
 
 
-  #CS_SITESPECIFIC_FACTORs
-  # TODO: http://ncdbpuf.facs.org/?q=node/370 find way to do this
+#########################################
+  df$CS_METS_DX_BRAIN <-
+    factor(
+      df$CS_METS_DX_BRAIN,
+      levels = c(0, 1, 8, 9),
+      labels = c(
+        "None", # no brain metastases"
+        "Yes",
+        "Not applicable",
+        "Unknown" # unknown  whether brain is involved; Not documented in patient record
+      )
+    )
+#########################################
 
+
+#########################################
   #CS_METS_EVAL
   # Records how the code for CS Mets at DX was determined based on the diagnostic methods employed.
   # TODO: do with other CS codes
-
-  #TUMOR_SIZE
-  # Describes the largest dimension of the diameter of the primary tumor in millimeters(mm).
+#########################################
 
 
-  #CS_VERSION_LATEST
-  #This is the version number of the most recent derivation of CS data items in the record.
-  # TODO
+#########################################
+  df$TUMOR_SIZE
+#########################################
 
-  #TREATMENT####
 
-  #RX_SUMM_TREATMENT_STATUS - Treatment Status
-  # This item summarizes whether the patient received any treatment or was under
-  # active surveillance.
+#########################################
   df$RX_SUMM_TREATMENT_STATUS <-
     factor(
       df$RX_SUMM_TREATMENT_STATUS,
@@ -1650,63 +1890,35 @@ df$HISTOLOGY
         "Unknown if treatment given"
       )
     )
+#########################################
 
 
-  #DX_RX_STARTED_DAYS
-  # The number of days between the date of diagnosis (NAACCR Item #390) and the
-  # date on which treatment [surgery, radiation, systemic, or other therapy] (NAACCR
-  # Item #1270) of the patient began at any facility
+#########################################
+  df$DX_RX_STARTED_DAYS
+#########################################
 
 
-  #DX_SURG_STARTED_DAYS - First Surgical Procedure, days from dx
-  # The number of days between the date of diagnosis (NAACCR Item #390) and the
-  # date the first treatment surgery was performed (NAACCR Item #1200). The surgery
-  # may be primary site surgery (NAACCR Item #1290), regional lymph node surgery
-  # (NAACCR Item #1292) or other regional or distant surgery (NAACCR Item #1294).
-  # Incisional biopsies are not coded as treatment surgery.
+#########################################
+  df$DX_SURG_STARTED_DAYS
+#########################################
 
 
-  #DX_DEFSURG_STARTED_DAYS - Definitive Surgical Procedure, days from dx
-  # The number of days between the date of diagnosis (NAACCR Item #390) and the
-  # date on which the most definitive surgical procedure was performed on the primary
-  # site (NAACCR Item #3170).
+#########################################
+  df$DX_DEFSURG_STARTED_DAYS
+#########################################
 
 
-  #RX_SUMM_SURG_PRIM_SITE - Surgical procedure of the primary site
-  # Records the surgical procedure performed to the primary site at any facility.
-  # "00-None No surgical procedure of primary site. Diagnosed at autopsy."
-  # "10--19 Site-specific codes; tumor destruction Tumor destruction, no pathologic specimen produced.  Refer to Surgery of the Primary Site Codes for the correct site-specific code for the procedure."
-  # "20--80-Site-specific codes; resection Refer to Surgery of the Primary Site Codes for the correct site-specific code for the procedure. "
-  # "90-Surgery, NOS A surgical procedure to the primary site was done, but no information on the type of surgical procedure is provided. "
-  # "98-Site-specific codes; special Special code. Refer to Surgery of the Primary Site Codes for the correct site-specific code for the procedure."
-  # "99-Unknown Patient record does not state whether a surgical procedure of the primary site was performed and no information is available. Death certificate only."
-  # TODO
-
-  df$RX_SUMM_SURG_PRIM_SITE <-
-    factor(
-      df$RX_SUMM_SURG_PRIM_SITE,
-      levels = c(0,1),
-      labels = c("Tumor destruction", "Tumor resection")
-    )
+#########################################
+ #RX_SUMM_SURG_PRIM_SITE
+#########################################
 
 
-
-  #RX_HOSP_SURG_PRIM_SITE
-  # This item records the surgical procedure performed to the primary site at the facility
-  # that submitted this record
-  # Records the surgical procedure performed to the primary site at any facility.
-  # "00-None No surgical procedure of primary site. Diagnosed at autopsy."
-  # "10-19 Site-specific codes; tumor destruction Tumor destruction, no pathologic specimen produced.  efer to Surgery of the Primary Site Codes for the correct site-specific code for the procedure."
-  # "20--80-Site-specific codes; resection Refer to Surgery of the Primary Site Codes for the correct site-specific code for the procedure. "
-  # "90-Surgery, NOS A surgical procedure to the primary site was done, but no information on the type of surgical procedure is provided. "
-  # "98-Site-specific codes; special Special code. Refer to Surgery of the Primary Site Codes for the correct site-specific code for the procedure."
-  # "99-Unknown Patient record does not state whether a surgical procedure of the primary site was performed and no information is available. Death certificate only."
+#########################################
+#RX_HOSP_SURG_PRIM_SITE
+#########################################
 
 
-  #RX_HOSP_SURG_APPR_2010 - Surgical Approach ONLY USED AFTER 2010
-  # This item is used to monitor patterns and trends in the adoption and utilization of
-  # minimally-invasive surgical techniques.
-
+#########################################
   df$RX_HOSP_SURG_APPR_2010 <-
     factor(
       df$RX_HOSP_SURG_APPR_2010,
@@ -1721,11 +1933,10 @@ df$HISTOLOGY
         "Unknown whether surgery was performed at this facility"
       )
     )
+#########################################
 
-  #RX_SUMM_SURGICAL_MARGINS - Surgical Margins
-  # Records the final status of the surgical margins after resection of the primary
-  # tumor.
 
+#########################################
     df$RX_SUMM_SURGICAL_MARGINS <-
     factor(
       df$RX_SUMM_SURGICAL_MARGINS,
@@ -1740,7 +1951,10 @@ df$HISTOLOGY
         "Unknown or not applicable" # It is unknown whether a surgical procedure to the primary site was performed; death certificate-only; for lymphomas with a lymph node primary site; an unknown or ill-defined primary; or for hematopoietic, reticuloendothelial, immunoproliferative, or myeloproliferative disease"
       )
     )
+#########################################
 
+
+#########################################
   df$MARGINS_RECODE <- NA
   df$MARGINS_RECODE[df$RX_SUMM_SURGICAL_MARGINS %in% c("No residual tumor")] <-    0
   df$MARGINS_RECODE[df$RX_SUMM_SURGICAL_MARGINS %in% c(
@@ -1760,12 +1974,10 @@ df$HISTOLOGY
                  "Positive margin",
                  "Indeterminate/NA")
     )
+#########################################
 
 
-  #RX_SUMM_SCOPE_REG_LN_SUR
-  # Identifies the removal, biopsy, or aspiration of regional lymph node(s) at the time of
-  # surgery of the primary site or during a separate surgical event.
-
+#########################################
   df$RX_SUMM_SCOPE_REG_LN_SUR <-
     factor(
       df$RX_SUMM_SCOPE_REG_LN_SUR,
@@ -1776,29 +1988,15 @@ df$HISTOLOGY
         "Unknown if regional lymph node surgery performed"
       )
     )
+#########################################
 
 
-
+#########################################
   #RX_SUMM_SCOPE_REG_LN_2012
-  # Identifies the removal, biopsy, or aspiration of regional lymph node(s) at the time of
-  # surgery of the primary site or during a separate surgical event.
-  # TODO bad link on site, can't find values
-
-  # df$RX_SUMM_SCOPE_REG_LN_2012 <-
-  #   factor(
-  #     df$RX_SUMM_SCOPE_REG_LN_2012,
-  #     levels = c(0, 1, 2, 3, 4, 5, 6, 7, 9),
-  #     labels = c(""
-  #     )
-  #   )
+#########################################
 
 
-
-
-  #RX_SUMM_SURG_OTH_REGDIS
-  # Records the surgical removal of distant lymph nodes or other tissue(s)/organ(s)
-  # beyond the primary site.
-
+#########################################
   df$RX_SUMM_SURG_OTH_REGDIS <-
     factor(
       df$RX_SUMM_SURG_OTH_REGDIS,
@@ -1813,19 +2011,15 @@ df$HISTOLOGY
         "Unknown" # It is unknown whether any surgical procedure of a non primary site was performed. Death certificate only."
       )
     )
+#########################################
 
 
-  #SURG_DISCHARGE_DAYS
-  # The number of days between the date the most definitive surgical procedure was
-  # performed on the primary site (NAACCR Item #3170) and the date the patient was
-  # discharged following primary site surgery (NAACCR Item #3180)
+#########################################
+df$SURG_DISCHARGE_DAYS
+#########################################
 
-   (df$SURG_DISCHARGE_DAYS) < "Surgical Inpatient Stay, Days from Surgery"
 
-  #READM_HOSP_30_DAYS
-  # Records a readmission to the same hospital, for the same illness, within 30 days of
-  # discharge following hospitalization for surgical resection of the primary site
-
+#########################################
   df$READM_HOSP_30_DAYS <-
     factor(
       df$READM_HOSP_30_DAYS,
@@ -1838,10 +2032,10 @@ df$HISTOLOGY
         "Unknown" # Unknown whether surgery of the primary site was recommended or performed. It is unknown whether the patient was readmitted to the same hospital within 30 days of discharge
       )
     )
+#########################################
 
 
-  #REASON_FOR_NO_SURGERY
-  # Records the reason that no surgery was performed on the primary site.
+#########################################
   df$REASON_FOR_NO_SURGERY <-
     factor(
       df$REASON_FOR_NO_SURGERY,
@@ -1857,8 +2051,10 @@ df$HISTOLOGY
         "Unknown if recommended or performed" # It is unknown whether surgery of the primary site was recommended or performed. Diagnosed at autopsy or death certificate only."
       )
     )
+#########################################
 
 
+#########################################
   # Calculated field to determine if the patient had surgery
   df$ANY_SURGERY <- NA
   df$ANY_SURGERY[df$REASON_FOR_NO_SURGERY %in% c("Surgery performed")] <-
@@ -1879,9 +2075,10 @@ df$HISTOLOGY
            levels = c(0, 1),
            labels = c("Surgery",
                       "No Surgery"))
+#########################################
 
 
-  # calculated variable to combine surgery and margins
+#########################################
   df$JOINT_SURG_MARGINS <- factor(
     paste(df$ANY_SURGERY, df$MARGINS_RECODE),
     levels = c(
@@ -1892,8 +2089,10 @@ df$HISTOLOGY
       "Surgery Positive margin"
     )
   )
+#########################################
 
 
+#########################################
   df$SURGERY_MARGINS <- NA
   df$SURGERY_MARGINS[df$JOINT_SURG_MARGINS %in% c("No Surgery Indeterminate/NA")] <- 0
   df$SURGERY_MARGINS[df$JOINT_SURG_MARGINS %in% c("Surgery Negative margin")] <- 1
@@ -1913,14 +2112,13 @@ df$HISTOLOGY
         "Surgery Margins Unknown"
       )
     )
+#########################################
+
+#########################################
+# tons of radiation variables
+#########################################
 
 
-  
-  #PALLIATIVE_CARE
-  # Identifies any care provided in an effort to palliate or alleviate symptoms. Palliative
-  # care is performed to relieve symptoms and may include surgery, radiation therapy,
-  # systemic therapy (chemotherapy, hormone therapy, or other systemic drugs),
-  # and/or other pain management therapy
 
   df$PALLIATIVE_CARE <-
     factor(

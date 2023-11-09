@@ -2114,9 +2114,471 @@ df$SURG_DISCHARGE_DAYS
     )
 #########################################
 
+
 #########################################
-# tons of radiation variables
+  df$DX_RAD_STARTED_DAYS
 #########################################
+
+
+#########################################
+  df$RAD_LOCATION_OF_RX <-
+    factor(
+      df$RAD_LOCATION_OF_RX,
+      levels = c(0, 1, 2, 3, 4, 8, 9),
+      labels = c(
+        "No radiation treatment", # No radiation therapy was administered to the patient
+        "All radiation treatment at this facility", # All radiation therapy was administered at the reporting facility
+        "Regional treatment at this facility, boost elsewhere", # Regional treatment was administered at the reporting facility; a boost dose was administered elsewhere
+        "Boost radiation at this facility, regional elsewhere", # Regional treatment was administered elsewhere; a boost dose was administered at the reporting facility
+        "All radiation treatment elsewhere", # All radiation therapy was administered elsewhere
+        "Other", # Radiation therapy was administered, but the pattern does not fit the above categories
+        "Unknown" # Radiation therapy was administered, but the location of the treatment facility is unknown or not stated in patient record; it is unknown whether radiation therapy was administered
+      )
+    )
+#########################################
+
+
+#########################################
+  df$PHASE_I_RT_TRIAL <- factor(df$PHASE_I_RT_TRIAL,
+    levels = c("00", "01", "02", "03", "04", "05", "06", "07", "09", "10", "11", "12",
+              "13", "14", "20", "21", "22", "23", "24", "25", "26", "29", "30", "31",
+              "32", "39", "40", "41", "42", "50", "51", "52", "53", "54", "55", "56",
+              "57", "58", "59", "60", "61", "62", "63", "64", "65", "66", "67", "68",
+              "70", "71", "72", "73", "80", "81", "82", "83", "84", "85", "86", "88",
+              "90", "91", "92", "93", "94", "95", "97", "98", "99"),
+    labels = c("No radiation treatment", "Neck lymph node regions", "Thoracic lymph node regions",
+              "Neck and thoracic lymph node regions", "Breast/Chest wall lymph node regions",
+              "Abdominal lymph nodes", "Pelvic lymph nodes", "Abdominal and pelvic lymph nodes",
+              "Lymph node region NOS", "Eye/orbit/optic nerve", "Pituitary", "Brain", 
+              "Brain (limited)", "Spinal cord", "Nasopharynx", "Oral cavity", "Oropharynx",
+              "Larynx (glottis) or hypopharynx", "Sinuses/Nasal tract", "Parotid or other salivary glands",
+              "Thyroid", "Head and neck (NOS)", "Lung or bronchus", "Mesothelium",
+              "Thymus", "Chest/lung (NOS)", "Breast (whole)", "Breast (partial)", "Chest wall",
+              "Esophagus", "Stomach", "Small bowel", "Colon", "Rectum", "Anus", "Liver",
+              "Biliary tree or gallbladder", "Pancreas or hepatopancreatic ampulla", "Abdomen (NOS)",
+              "Bladder (whole)", "Bladder (partial)", "Kidney", "Ureter", "Prostate (whole)",
+              "Prostate (partial)", "Urethra", "Penis", "Testicle or scrotum",
+              "Ovaries or fallopian tubes", "Uterus or cervix", "Vagina", "Vulva", "Skull",
+              "Spine/vertebral bodies", "Shoulder", "Ribs", "Hip", "Pelvic bones",
+              "Pelvis (NOS, nonvisceral)", "Extremity bone, NOS", "Skin", "Soft Tissue",
+              "Hemibody", "Whole body", "Mantle, minimantle (obsolete after 2017)",
+              "Lower extended field (obsolete after 2017)", "Invalid historical FORDS value",
+              "Other", "Unknown"))
+#########################################
+
+
+#########################################
+  df$PHASE_I_RT_TO_LN <-
+    factor(
+      df$PHASE_I_RT_TO_LN,
+      levels = c(0, 1, 2, 3, 4, 5, 6, 7, 8, 88, 99),
+      labels = c(
+        "No radiation to draining lymph nodes",
+        "Neck lymph node regions",
+        "Thoracic lymph node regions",
+        "Neck and thoracic lymph node regions",
+        "Breast/ Chest wall lymph node regions",
+        "Abdominal lymph nodes",
+        "Pelvic lymph nodes",
+        "Abdominal and pelvic lymph nodes",
+        "Lymph node region, NOS",
+        "Not applicable; Radiation primary treatment is lymph nodes",
+        "Unknown if any radiation treatment to draining lymph nodes; Unknown if radiation treatment administered"
+      )
+    )
+#########################################
+
+
+#########################################
+  df$PHASE_I_RT_TO_MODALITY <-
+    factor(
+      df$PHASE_I_RT_TO_MODALITY,
+      levels = c(
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        98,
+        99
+      ),
+      labels = c(
+        "No radiation treatment",
+        "External beam, NOS",
+        "External beam, photons",
+        "External beam, protons",
+        "External beam, electrons",
+        "External beam, neutrons",
+        "External beam, carbon ions",
+        "Brachytherapy, NOS",
+        "Brachytherapy, intracavitary, LDR",
+        "Brachytherapy, intracavitary, HDR",
+        "Brachytherapy, interstitial, LDR",
+        "Brachytherapy, interstitial, HDR",
+        "Brachytherapy, electronic",
+        "Radioisotopes, NOS",
+        "Radioisotopes, Radium-223",
+        "Radioisotopes, Strontium-89",
+        "Radioisotopes, Strontium-90",
+        "Radiation Rx administered, Rx modality unknown",
+        "Radiation treatment modality unknown; Unknown if radiation treatment administered"
+      )
+    )
+#########################################
+
+
+#########################################
+df$PHASE_I_BEAM_TECH <- factor(df$PHASE_I_BEAM_TECH,
+  levels = c("00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "88", "98", "99"),
+  labels = c(
+    "No radiation treatment",
+    "External beam, NOS",
+    "Low energy x-ray/photon therapy",
+    "2-D therapy",
+    "Conformal or 3-D conformal therapy",
+    "Intensity modulated therapy",
+    "Stereotactic radiotherapy or radiosurgery, NOS",
+    "Stereotactic radiotherapy or radiosurgery, robotic",
+    "Stereotactic radiotherapy or radiosurgery, Gamma Knife",
+    "CT-guided online adaptive therapy",
+    "MR-guided online adaptive therapy",
+    "Not applicable",
+    "Other, NOS",
+    "Unknown"
+  )
+)
+#########################################
+
+
+#########################################
+  df$PHASE_I_DOSE_FRACT <-
+  # if its 99998 or 99999 00200 00150 or 00220, then mark it NA
+  ifelse(df$PHASE_I_DOSE_FRACT %in% c(99998, 99999), NA, df$PHASE_I_DOSE_FRACT)
+#########################################
+
+
+#########################################
+  df$PHASE_I_NUM_FRACT <- 
+  ifelse(df$PHASE_I_NUM_FRACT %in% c(999), NA, df$PHASE_I_NUM_FRACT)
+#########################################
+
+
+#########################################
+  df$PHASE_I_TOTAL_DOSE <- 
+  ifelse(df$PHASE_I_TOTAL_DOSE %in% c(999998, 999999), NA, df$PHASE_I_TOTAL_DOSE)
+#########################################
+
+
+#########################################
+df$PHASE_II_RT_VOLUME <- factor(df$PHASE_II_RT_VOLUME, 
+  levels = c("00", "", "01", "02", "03", "04", "05", "06", "07", "09", "10", "11", "12", 
+             "13", "14", "20", "21", "22", "23", "24", "25", "26", "29", "30", "31", "32", 
+             "39", "40", "41", "42", "50", "51", "52", "53", "54", "55", "56", "57", "58", 
+             "59", "60", "61", "62", "63", "64", "65", "66", "67", "68", "70", "71", "72", 
+             "73", "80", "81", "82", "83", "84", "85", "86", "88", "90", "91", "92", "93", 
+             "94", "95", "97", "98", "99"),
+  labels = c(
+    "No radiation treatment", 
+    "No radiation treatment",  # for the blank code
+    "Neck lymph node regions", 
+    "Thoracic lymph node regions", 
+    "Neck and thoracic lymph node regions", 
+    "Breast/Chest wall lymph node regions", 
+    "Abdominal lymph nodes", 
+    "Pelvic lymph nodes", 
+    "Abdominal and pelvic lymph nodes", 
+    "Lymph node region NOS", 
+    "Eye/orbit/optic nerve", 
+    "Pituitary", 
+    "Brain", 
+    "Brain (limited)", 
+    "Spinal cord", 
+    "Nasopharynx", 
+    "Oral cavity", 
+    "Oropharynx", 
+    "Larynx (glottis) or hypopharynx", 
+    "Sinuses/Nasal tract", 
+    "Parotid or other salivary glands", 
+    "Thyroid", 
+    "Head and neck (NOS)", 
+    "Lung or bronchus", 
+    "Mesothelium", 
+    "Thymus", 
+    "Chest/lung (NOS)", 
+    "Breast (whole)", 
+    "Breast (partial)", 
+    "Chest wall", 
+    "Esophagus", 
+    "Stomach", 
+    "Small bowel", 
+    "Colon", 
+    "Rectum", 
+    "Anus", 
+    "Liver", 
+    "Biliary tree or gallbladder", 
+    "Pancreas or hepatopancreatic ampulla", 
+    "Abdomen (NOS)", 
+    "Bladder (whole)", 
+    "Bladder (partial)", 
+    "Kidney", 
+    "Ureter", 
+    "Prostate (whole)", 
+    "Prostate (partial)", 
+    "Urethra", 
+    "Penis", 
+    "Testicle or scrotum", 
+    "Ovaries or fallopian tubes", 
+    "Uterus or cervix", 
+    "Vagina", 
+    "Vulva", 
+    "Skull", 
+    "Spine/vertebral bodies", 
+    "Shoulder", 
+    "Ribs", 
+    "Hip", 
+    "Pelvic bones", 
+    "Pelvis (NOS, nonvisceral)", 
+    "Extremity bone, NOS", 
+    "Skin", 
+    "Soft Tissue", 
+    "Hemibody", 
+    "Whole body", 
+    "Mantle, minimantle (obsolete after 2017)", 
+    "Lower extended field (obsolete after 2017)", 
+    "Invalid historical FORDS value", 
+    "Other", 
+    "Unknown"
+  )
+)
+#########################################
+
+
+#########################################
+  df$PHASE_II_RT_TO_LN <-
+    factor(
+      df$PHASE_II_RT_TO_LN,
+      levels = c(0, 1, 2, 3, 4, 5, 6, 7, 8, 88, 99),
+      labels = c(
+        "No radiation to draining lymph nodes",
+        "Neck lymph node regions",
+        "Thoracic lymph node regions",
+        "Neck and thoracic lymph node regions",
+        "Breast/ Chest wall lymph node regions",
+        "Abdominal lymph nodes",
+        "Pelvic lymph nodes",
+        "Abdominal and pelvic lymph nodes",
+        "Lymph node region, NOS",
+        "Not applicable; Radiation primary treatment is lymph nodes",
+        "Unknown if any radiation treatment to draining lymph nodes; Unknown if radiation treatment administered"
+      )
+    )
+#########################################
+
+
+#########################################
+  df$PHASE_II_RT_MODALITY <-
+    factor(
+      df$PHASE_II_RT_MODALITY,
+      levels = c(
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        98,
+        99
+      ),
+      labels = c(
+        "No radiation treatment",
+        "External beam, NOS",
+        "External beam, photons",
+        "External beam, protons",
+        "External beam, electrons",
+        "External beam, neutrons",
+        "External beam, carbon ions",
+        "Brachytherapy, NOS",
+        "Brachytherapy, intracavitary, LDR",
+        "Brachytherapy, intracavitary, HDR",
+        "Brachytherapy, interstitial, LDR",
+        "Brachytherapy, interstitial, HDR",
+        "Brachytherapy, electronic",
+        "Radioisotopes, NOS",
+        "Radioisotopes, Radium-223",
+        "Radioisotopes, Strontium-89",
+        "Radioisotopes, Strontium-90",
+        "Radiation Rx administered, Rx modality unknown",
+        "Radiation treatment modality unknown; Unknown if radiation treatment administered"
+      )
+    )
+#########################################
+
+
+#########################################
+  df$PHASE_II_BEAM_TECH <- factor(df$PHASE_II_BEAM_TECH,
+    levels = c("00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", 
+               "88", "98", "99"),
+    labels = c(
+      "No radiation treatment",
+      "External beam, NOS",
+      "Low energy x-ray/photon therapy",
+      "2-D therapy",
+      "Conformal or 3-D conformal therapy",
+      "Intensity modulated therapy",
+      "Stereotactic radiotherapy or radiosurgery, NOS",
+      "Stereotactic radiotherapy or radiosurgery, robotic",
+      "Stereotactic radiotherapy or radiosurgery, Gamma Knife",
+      "CT-guided online adaptive therapy",
+      "MR-guided online adaptive therapy",
+      "Not applicable",
+      "Other, NOS",
+      "Unknown"
+    )
+  )
+#########################################
+
+
+#########################################
+  df$PHASE_II_DOSE_FRACT <-
+  ifelse(df$PHASE_II_DOSE_FRACT %in% c(99998, 99999), NA, df$PHASE_II_DOSE_FRACT)
+#########################################
+
+
+#########################################
+  df$PHASE_II_NUM_FRACT <-
+  ifelse(df$PHASE_II_NUM_FRACT %in% c(999), NA, df$PHASE_II_NUM_FRACT)
+#########################################
+
+
+#########################################
+  df$PHASE_II_TOTAL_DOSE <-
+  ifelse(df$PHASE_II_TOTAL_DOSE %in% c(999998, 999999), NA, df$PHASE_II_TOTAL_DOSE)
+#########################################
+
+
+#########################################
+df$PHASE_III_RT_VOLUME <- factor(df$PHASE_III_RT_VOLUME, 
+  levels = c("00", "", "01", "02", "03", "04", "05", "06", "07", "09", "10", "11", "12", 
+             "13", "14", "20", "21", "22", "23", "24", "25", "26", "29", "30", "31", "32", 
+             "39", "40", "41", "42", "50", "51", "52", "53", "54", "55", "56", "57", "58", 
+             "59", "60", "61", "62", "63", "64", "65", "66", "67", "68", "70", "71", "72", 
+             "73", "80", "81", "82", "83", "84", "85", "86", "88", "90", "91", "92", "93", 
+             "94", "95", "97", "98", "99"),
+  labels = c(
+    "No radiation treatment", 
+    "No radiation treatment",  # for the blank code
+    "Neck lymph node regions", 
+    "Thoracic lymph node regions", 
+    "Neck and thoracic lymph node regions", 
+    "Breast/Chest wall lymph node regions", 
+    "Abdominal lymph nodes", 
+    "Pelvic lymph nodes", 
+    "Abdominal and pelvic lymph nodes", 
+    "Lymph node region NOS", 
+    "Eye/orbit/optic nerve", 
+    "Pituitary", 
+    "Brain", 
+    "Brain (limited)", 
+    "Spinal cord", 
+    "Nasopharynx", 
+    "Oral cavity", 
+    "Oropharynx", 
+    "Larynx (glottis) or hypopharynx", 
+    "Sinuses/Nasal tract", 
+    "Parotid or other salivary glands", 
+    "Thyroid", 
+    "Head and neck (NOS)", 
+    "Lung or bronchus", 
+    "Mesothelium", 
+    "Thymus", 
+    "Chest/lung (NOS)", 
+    "Breast (whole)", 
+    "Breast (partial)", 
+    "Chest wall", 
+    "Esophagus", 
+    "Stomach", 
+    "Small bowel", 
+    "Colon", 
+    "Rectum", 
+    "Anus", 
+    "Liver", 
+    "Biliary tree or gallbladder", 
+    "Pancreas or hepatopancreatic ampulla", 
+    "Abdomen (NOS)", 
+    "Bladder (whole)", 
+    "Bladder (partial)", 
+    "Kidney", 
+    "Ureter", 
+    "Prostate (whole)", 
+    "Prostate (partial)", 
+    "Urethra", 
+    "Penis", 
+    "Testicle or scrotum", 
+    "Ovaries or fallopian tubes", 
+    "Uterus or cervix", 
+    "Vagina", 
+    "Vulva", 
+    "Skull", 
+    "Spine/vertebral bodies", 
+    "Shoulder", 
+    "Ribs", 
+    "Hip", 
+    "Pelvic bones", 
+    "Pelvis (NOS, nonvisceral)", 
+    "Extremity bone, NOS", 
+    "Skin", 
+    "Soft Tissue", 
+    "Hemibody", 
+    "Whole body", 
+    "Mantle, minimantle (obsolete after 2017)", 
+    "Lower extended field (obsolete after 2017)", 
+    "Invalid historical FORDS value", 
+    "Other", 
+    "Unknown"
+  )
+)
+#########################################
+
+
+#########################################
+  df$PHASE_III_RT_TO_LN <-
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

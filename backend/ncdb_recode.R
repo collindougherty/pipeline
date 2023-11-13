@@ -3,7 +3,7 @@ library(dplyr)
 
 ncdb_recode <- function(df) {
   #########################################
-  df$PUF_CASE_ID
+  df$PUF_CASE_ID <- as.character(df$PUF_CASE_ID)
   #########################################
 
 
@@ -3052,7 +3052,18 @@ df$PHASE_III_RT_VOLUME <- factor(df$PHASE_III_RT_VOLUME,
   #########################################
 
 
-  return(df)
+  # lets return a df which removes the columns we have not edited yet
+  # that would be SEQUENCE_NUMBER, PRIMARY_SITE, HISTOLOGY, Grade_Clin, Grade_Path, Grade_Path_Post, CS_VERSION_ENCODED, CS_EXTENSION, CS_METS_AT_DX, CS_METS_EVAL, RX_SUMM_SURG_PRIM_SITE, and CS_SITESPECIFIC_FACTOR_1-25
+
+  new_df <- df[, !(names(df) %in% c("SEQUENCE_NUMBER", "PRIMARY_SITE", "HISTOLOGY", "Grade_Clin", "Grade_Path", "Grade_Path_Post", 
+  "CS_VERSION_ENCODED", "CS_EXTENSION", "CS_METS_AT_DX", "CS_METS_EVAL", "RX_SUMM_SURG_PRIM_SITE", "CS_SITESPECIFIC_FACTOR_1",
+  "CS_SITESPECIFIC_FACTOR_2", "CS_SITESPECIFIC_FACTOR_3", "CS_SITESPECIFIC_FACTOR_4", "CS_SITESPECIFIC_FACTOR_5", "CS_SITESPECIFIC_FACTOR_6",
+  "CS_SITESPECIFIC_FACTOR_7", "CS_SITESPECIFIC_FACTOR_8", "CS_SITESPECIFIC_FACTOR_9", "CS_SITESPECIFIC_FACTOR_10", "CS_SITESPECIFIC_FACTOR_11",
+  "CS_SITESPECIFIC_FACTOR_12", "CS_SITESPECIFIC_FACTOR_13", "CS_SITESPECIFIC_FACTOR_14", "CS_SITESPECIFIC_FACTOR_15", "CS_SITESPECIFIC_FACTOR_16",
+  "CS_SITESPECIFIC_FACTOR_17", "CS_SITESPECIFIC_FACTOR_18", "CS_SITESPECIFIC_FACTOR_19", "CS_SITESPECIFIC_FACTOR_20", "CS_SITESPECIFIC_FACTOR_21",
+  "CS_SITESPECIFIC_FACTOR_22", "CS_SITESPECIFIC_FACTOR_23", "CS_SITESPECIFIC_FACTOR_24", "CS_SITESPECIFIC_FACTOR_25"))]
+
+  return(new_df)
 }
 
 
@@ -3061,9 +3072,8 @@ df$PHASE_III_RT_VOLUME <- factor(df$PHASE_III_RT_VOLUME,
 
 
 ncdb_rename <- function(df) {
-  df <- df %>%
-    rename(case_id = PUF_CASE_ID,
-           facility = PUF_FACILITY_ID,
-           type_of_facility = FACILITY_TYPE_CD)
+  names(df)[names(df) == "PUF_CASE_ID"] <- "case_id"
+  names(df)[names(df) == "PUF_FACILITY_ID"] <- "facility"
+  names(df)[names(df) == "FACILITY_TYPE_CD"] <- "type_of_facility"
   return(df)
 }

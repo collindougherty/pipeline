@@ -2,12 +2,11 @@
 library(shiny)
 options(shiny.maxRequestSize = 3000 * 1024^2)  # Increase file size limit
 
-# Load ncdb_recode.R script
-source("/Users/collindougherty/Documents/Work/pipeline/backend/dtypes.r")
+# Load ncdb_recode.R and dtypes.r scripts
 source("/Users/collindougherty/Documents/Work/pipeline/backend/ncdb_recode.R")
+source("/Users/collindougherty/Documents/Work/pipeline/backend/dtypes.r")
 
 ui <- fluidPage(
-  # Center the title using HTML tags and CSS
   tags$head(
     tags$style(HTML("
             .centered-title {
@@ -20,65 +19,80 @@ ui <- fluidPage(
   tags$div(class = "centered-title", 
            titlePanel("NCDB Data Analysis")
   ),
-  
-  # Center the file upload input
   fluidRow(
-    column(4, offset = 4,  # Adjust the width and offset to center
+    column(4, offset = 4,
            fileInput("file1", "Choose CSV File",
                      accept = c("text/csv", 
                                 "text/comma-separated-values,text/plain", 
                                 ".csv"))
     )
   ),
-  
-  # Place the table output below the upload box
   fluidRow(
-    column(12,
-           tableOutput("table")  # Output for displaying the table
-    )
+    column(6, uiOutput("x_vars_ui")),
+    column(6, uiOutput("y_var_ui"))
+  ),
+  fluidRow(
+    column(4, offset = 4,
+           uiOutput("submit_ui"))
+  ),
+  fluidRow(
+    column(12, tableOutput("table"))
   )
 )
 
-server <- function(input, output) {
-    # Render table with processed data
-    output$table <- renderTable({
-        req(input$file1)
-        
-        # Initialize the progress bar
-        withProgress(message = 'Processing data...', value = 0, {
-            # Number of steps in the process
-            total_steps <- 4
-
-            for(i in 1:total_steps) {
-                # Update the progress bar
-                setProgress(value = i/total_steps)
-
-                # Simulating a long process
-                Sys.sleep(0.5)  # Half-second delay to simulate processing
-
-                # Actual data processing steps go here
-                # For instance, processing a part of the data in each iteration
-                # lets put each processing step in here
-                if (i == 1) {
-                    # Read and process the data
-                    df <- read.csv(input$file1$datapath)
-                }
-                if (i == 2) {
-                    recodedDf <- ncdb_recode(df)
-                }
-                if (i == 3) {
-                    dtypes_data <- dtype(recodedDf)
-                }
-            }
-
-            return(head(dtypes_data))
-        })
+server <- function(input, output, session) {
+  reactiveDf <- reactiveVal()
+  showDropdowns <- reactiveVal(FALSE)
+  
+  observeEvent(input$file1, {
+    req(input$file1)
+    
+    withProgress(message = 'Uploading and processing data...', value = 0, {
+      setProgress(value = 0.2)  # Indicate initial progress
+      Sys.sleep(0.5)  # Simulate upload time
+      
+      df <- read.csv(input$file1$datapath)
+      setProgress(value = 0.5)  # Halfway through processing
+      recodedDf <- ncdb_recode(df)
+      dtypes_data <- dtype(recodedDf)
+      reactiveDf(dtypes_data)
+      
+      setProgress(value = 1)  # Indicate completion of processing
     })
+    
+    showDropdowns(TRUE)
+  })
+  
+  output$x_vars_ui <- renderUI({
+    if(showDropdowns()) {
+      selectInput("x_vars", "Choose X Variables:", choices = names(reactiveDf()), multiple = TRUE)
+    }
+  })
+  
+  output$y_var_ui <- renderUI({
+    if(showDropdowns()) {
+      selectInput("y_var", "Choose Y Variable:", choices = names(reactiveDf()), multiple = FALSE)
+    }
+  })
+  
+  output$submit_ui <- renderUI({
+    if(showDropdowns()) {
+      actionButton("submit", "Submit", class = "btn-primary")
+    }
+  })
+  
+  selectedDf <- reactiveVal()  # To store the selected data frame
+  
+  observeEvent(input$submit, {
+    req(input$x_vars, input$y_var, reactiveDf())
+    selectedDf(reactiveDf()[, c(input$x_vars, input$y_var), drop = FALSE])
+  })
+  
+  output$table <- renderTable({
+    req(selectedDf())
+    head(selectedDf())
+  })
 }
 
-
-
-
-
-# Run the application 
 shinyApp(ui = ui, server = server)
+

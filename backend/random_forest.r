@@ -82,61 +82,28 @@ rf_workflow <-
 
 rf_fit <- rf_workflow %>% fit(data = training_data)
 
-# if (accuracy == 1) {
-#   rf_model <- workflows::extract_fit_engine(rf_fit)
-#   importance <- vip::vip(rf_model)
-#   # importance is a plot, not a dataframe
-#   # so we need to extract the dataframe from the plot
-#   importance_df <- importance$data
-#   # sort the dataframe by importance
-#   importance_df <- importance_df[order(importance_df$Importance, decreasing = TRUE), ]
-#   # get the 10 most important variables along with their importance values
-#   most_important_vars <- importance_df[1:10, c("Variable", "Importance")]
-#   print("The model's accuracy is 1, which almost certainly indicates selection of variables with perfect correlation to what you are trying to predict. Variables with extremely high importance relative to the rest are likely culprits. Consider examining variables with outlier high importance values:")
-#   print(most_important_vars)
-#   # also show the plot
-#   #print(importance)
-#   # update the plot to have text explaining what the user should do
-#   # this is a hacky way to do it, but it works
-#   # first, get the plot
-#   plot <- importance$plot
-#   # then, add the text
-#   plot <- plot + ggplot2::annotate("text", x = 0, y = 0, label = "The model's accuracy is 1, which almost certainly indicates selection of variables with perfect correlation to what you are trying to predict. Variables with extremely high importance relative to the rest are likely culprits. Consider examining variables with outlier high importance values:", hjust = 0, vjust = 0, size = 3)
-#   # then, update the plot
-#   importance$plot <- plot
-#   # then, print the plot
-#   print(importance)
-# }
-
-
 if (accuracy == 1) {
   rf_model <- workflows::extract_fit_engine(rf_fit)
   importance <- vip::vip(rf_model)
-  
-  if (!is.null(importance$data)) {
-    importance_df <- importance$data
-    importance_df <- importance_df[order(importance_df$Importance, decreasing = TRUE), ]
-    
-    if(nrow(importance_df) >= 10){
-      most_important_vars <- importance_df[1:10, c("Variable", "Importance")]
-
-      message("The model's accuracy is 1, which almost certainly indicates selection of variables with perfect correlation to what you are trying to predict. Variables with extremely high importance relative to the rest are likely culprits. Consider examining variables with outlier high importance values:")
-      
-      print(most_important_vars)
-    } else {
-      message('The data frame has less than 10 rows')
-    }
-    
-    if (!is.null(importance$plot)) {   
-      plot <- importance$plot
-      plot <- plot + ggplot2::annotate("text", x = 0, y = 0, label = "The model's accuracy is 1, which almost certainly indicates selection of variables with perfect correlation to what you are trying to predict. Variables with extremely high importance relative to the rest are likely culprits. Consider examining variables with outlier high importance values:", hjust = 0, vjust = 0, size = 3)
-      importance$plot <- plot
-      print(importance)
-    } else {
-      message('The plot does not exist')
-    }
-    
-  } else {
-    message('The data does not exist')
-  }
+  # importance is a plot, not a dataframe
+  # so we need to extract the dataframe from the plot
+  importance_df <- importance$data
+  # sort the dataframe by importance
+  importance_df <- importance_df[order(importance_df$Importance, decreasing = TRUE), ]
+  # get the 10 most important variables along with their importance values
+  most_important_vars <- importance_df[1:10, c("Variable", "Importance")]
+  message("The model's accuracy is 1, which almost certainly indicates selection of variables with perfect correlation to what you are trying to predict. Variables with extremely high importance relative to the rest are likely culprits. Consider examining variables with outlier high importance values:")
+  print(most_important_vars)
+  # also show the plot
+  #print(importance)
+  # update the plot to have text explaining what the user should do
+  # this is a hacky way to do it, but it works
+  # first, get the plot
+  plot <- importance$plot
+  # then, add the text
+  plot <- plot + ggplot2::annotate("text", x = 0, y = 0, label = "The model's accuracy is 1, which almost certainly indicates selection of variables with perfect correlation to what you are trying to predict. Variables with extremely high importance relative to the rest are likely culprits. Consider examining variables with outlier high importance values:", hjust = 0, vjust = 0, size = 3)
+  # then, update the plot
+  importance$plot <- plot
+  # then, print the plot
+  print(importance)
 }

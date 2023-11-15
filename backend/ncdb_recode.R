@@ -2,6 +2,7 @@
 library(dplyr)
 
 ncdb_recode <- function(df) {
+
   #########################################
   df$PUF_CASE_ID <- as.character(df$PUF_CASE_ID)
   #########################################

@@ -37,6 +37,9 @@ ui <- fluidPage(
   ),
   fluidRow(
     column(12, tableOutput("table"))
+  ),
+  fluidRow(
+    column(12, textOutput("proceedMessage"))
   )
 )
 
@@ -48,16 +51,17 @@ server <- function(input, output, session) {
     req(input$file1)
     
     withProgress(message = 'Uploading and processing data...', value = 0, {
-      setProgress(value = 0.2)  # Indicate initial progress
-      Sys.sleep(0.5)  # Simulate upload time
-      
+      setProgress(value = 0.25)
       df <- read.csv(input$file1$datapath)
-      setProgress(value = 0.5)  # Halfway through processing
-      recodedDf <- ncdb_recode(df)
-      dtypes_data <- dtype(recodedDf)
-      reactiveDf(dtypes_data)
       
-      setProgress(value = 1)  # Indicate completion of processing
+      setProgress(value = 0.50)
+      recodedDf <- ncdb_recode(df)
+      
+      setProgress(value = 0.75)
+      dtypes_data <- dtype(recodedDf)
+      
+      reactiveDf(dtypes_data)
+      setProgress(value = 1)
     })
     
     showDropdowns(TRUE)
@@ -65,14 +69,23 @@ server <- function(input, output, session) {
   
   output$x_vars_ui <- renderUI({
     if(showDropdowns()) {
-      selectInput("x_vars", "Choose X Variables:", choices = names(reactiveDf()), multiple = TRUE)
+      selectInput("x_vars", "Choose X Variables:", 
+                  choices = names(reactiveDf()), 
+                  multiple = TRUE)
     }
   })
   
   output$y_var_ui <- renderUI({
     if(showDropdowns()) {
-      selectInput("y_var", "Choose Y Variable:", choices = names(reactiveDf()), multiple = FALSE)
+      availableYChoices <- setdiff(names(reactiveDf()), input$x_vars)
+      selectInput("y_var", "Choose Y Variable:", 
+                  choices = availableYChoices, 
+                  multiple = FALSE)
     }
+  })
+  
+  observeEvent(input$x_vars, {
+    updateSelectInput(session, "y_var", choices = setdiff(names(reactiveDf()), input$x_vars))
   })
   
   output$submit_ui <- renderUI({
@@ -81,7 +94,7 @@ server <- function(input, output, session) {
     }
   })
   
-  selectedDf <- reactiveVal()  # To store the selected data frame
+  selectedDf <- reactiveVal()
   
   observeEvent(input$submit, {
     req(input$x_vars, input$y_var, reactiveDf())
@@ -91,6 +104,12 @@ server <- function(input, output, session) {
   output$table <- renderTable({
     req(selectedDf())
     head(selectedDf())
+  })
+  
+  output$proceedMessage <- renderText({
+    if(!is.null(selectedDf())) {
+      return("If these look correct, let's proceed to analysis. Otherwise, edit your selection.")
+    }
   })
 }
 

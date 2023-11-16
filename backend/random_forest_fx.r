@@ -1,17 +1,15 @@
-library(tidyverse)
-library(tidymodels)
-library(vcd)
-set.seed(1234)
-
-# remove every column which is more than 25% NA
-# df <- df[, colMeans(is.na(df)) < 0.25]
-
 # lets define a function with this process
 # this function will take in a df, xvs and yv and return a trained model
 random_forest_fx <- function(xv, yv, df) {
+  library(tidyverse)
+  library(tidymodels)
+  library(vcd)
+  set.seed(1234)
 
 ########################################################
   # remove na's
+  # remove every column which is more than 25% NA
+  df <- df[, colMeans(is.na(df)) < 0.25]
   df <- df %>% drop_na()
 ########################################################
 
@@ -24,16 +22,22 @@ random_forest_fx <- function(xv, yv, df) {
 
 
 #######################################################
-  model_recipe <-
-    recipe(yv ~ xv, data = training_data) %>%
-    # if PUF_CASE_ID is in the data, mark it as id
-    update_role(PUF_CASE_ID, new_role = "id") %>%
-    # Apply step_dummy() for factor variables
-    # step_dummy(all_nominal_predictors()) %>%
-    # remove all zero variance predictors
+  model_formula <- reformulate(termlabels = xv, response = yv)
+  # Start the recipe
+  model_recipe <- recipe(model_formula, data = training_data)
+  
+  # Conditionally update role if PUF_CASE_ID is in the data
+  if ("PUF_CASE_ID" %in% names(df)) {
+    model_recipe <- model_recipe %>%
+      update_role(PUF_CASE_ID, new_role = "id")
+  }
+  
+  # Continue with the rest of the recipe
+  model_recipe <- model_recipe %>%
+    # Apply necessary recipe steps here...
+    # step_dummy(all_nominal(), -all_outcomes()) %>%
     step_zv(all_predictors()) %>%
-    # Normalize only numeric predictors
-    step_normalize(all_numeric_predictors())
+    step_normalize(all_numeric_predictors(), -all_nominal())
 #######################################################
 
 
@@ -61,10 +65,9 @@ random_forest_fx <- function(xv, yv, df) {
 
 
 #######################################################
-rftestpredict <- rf_fit %>% predict(new_data = testing_data) %>% bind_cols(testing_data)
-rftestpredict <- rf_fit %>% predict(new_data = testing_data, type= "prob") %>% bind_cols(rftestpredict)
-print(metrics(rftestpredict, yv, .pred_class))
-tb <- metrics(rftestpredict, yv, .pred_class)
+  rftestpredict <- rf_fit %>% predict(new_data = testing_data) %>% bind_cols(testing_data)
+  rftestpredict <- rf_fit %>% predict(new_data = testing_data, type= "prob") %>% bind_cols(rftestpredict)
+  performance_stats <- metrics(rftestpredict, yv, .pred_class)
 #######################################################
 
 
@@ -99,58 +102,58 @@ tb <- metrics(rftestpredict, yv, .pred_class)
 
 
 #######################################################
-# lets plot the ROC curve
-# first, get the predictions
-rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
-# then, plot the ROC curve
-roc <- roc_curve(rfpred, yv, .pred_1)
+# # lets plot the ROC curve
+# # first, get the predictions
+# rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
+# # then, plot the ROC curve
+# roc <- roc_curve(rfpred, yv, .pred_1)
 #######################################################
 
 
 #######################################################
-# lets plot the precision recall curve
-# first, get the predictions
-rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
-# then, plot the precision recall curve
-pr <- precision_recall_curve(rfpred, yv, .pred_1)
+# # lets plot the precision recall curve
+# # first, get the predictions
+# rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
+# # then, plot the precision recall curve
+# pr <- precision_recall_curve(rfpred, yv, .pred_1)
 #######################################################
 
 
 #######################################################
-# lets plot the lift curve
-# first, get the predictions
-rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
-# then, plot the lift curve
-lift <- lift_curve(rfpred, yv, .pred_1)
+# # lets plot the lift curve
+# # first, get the predictions
+# rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
+# # then, plot the lift curve
+# lift <- lift_curve(rfpred, yv, .pred_1)
 #######################################################
 
 
 #######################################################
-# lets plot the gains curve
-# first, get the predictions
-rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
-# then, plot the gains curve
-gains <- gains_curve(rfpred, yv, .pred_1)
+# # lets plot the gains curve
+# # first, get the predictions
+# rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
+# # then, plot the gains curve
+# gains <- gains_curve(rfpred, yv, .pred_1)
 #######################################################
 
 
 #######################################################
-# lets plot the cumulative gains curve
-# first, get the predictions
-rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
-# then, plot the cumulative gains curve
-cumgains <- gains_curve(rfpred, yv, .pred_1, cumulative = TRUE)
+# # lets plot the cumulative gains curve
+# # first, get the predictions
+# rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
+# # then, plot the cumulative gains curve
+# cumgains <- gains_curve(rfpred, yv, .pred_1, cumulative = TRUE)
 #######################################################
 
 
 #######################################################
 # lets get a table of the confusion matrix and performance stats
 # first, get the predictions
-rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
-# then, get the confusion matrix
-confusion_matrix <- conf_mat(rfpred, yv, .pred_class)
-# then, get the performance stats
-performance_stats <- metrics(rfpred, yv, .pred_class)
+# rfpred <- rf_fit %>% predict(new_data = testing_data, type = "prob") %>% bind_cols(testing_data)
+# # then, get the confusion matrix
+# confusion_matrix <- conf_mat(rfpred, yv, .pred_class)
+# # then, get the performance stats
+# performance_stats <- metrics(rfpred, yv, .pred_class)
 #######################################################
 
   return(performance_stats)

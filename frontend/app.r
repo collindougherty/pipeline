@@ -5,7 +5,7 @@ options(shiny.maxRequestSize = 3000 * 1024^2)  # Increase file size limit
 # Load ncdb_recode.R and dtypes.r scripts
 source("/Users/collindougherty/Documents/Work/pipeline/backend/ncdb_recode.R")
 source("/Users/collindougherty/Documents/Work/pipeline/backend/dtypes.r")
-source("/Users/collindougherty/Documents/Work/pipeline/backend/random_forest.r")
+source("/Users/collindougherty/Documents/Work/pipeline/backend/random_forest_fx.r")
 
 ui <- fluidPage(
   tags$head(
@@ -135,14 +135,13 @@ server <- function(input, output, session) {
   
   analysisResults <- reactiveVal()
   
+
+  
   observeEvent(input$rfButton, {
     req(selectedDf(), input$x_vars, input$y_var)
-    # Now you can call 'random_forest' with the current values of 'input$x_vars' and 'input$y_var'
-    results <- c(1,2,3,4)
-    # Do something with the results, like storing them in a reactive value
+    results <- random_forest_fx(input$x_vars, input$y_var, selectedDf())
     analysisResults(results)
   })
-
   
   observeEvent(input$lrButton, {
     req(selectedDf(), input$x_vars, input$y_var)
@@ -166,5 +165,6 @@ server <- function(input, output, session) {
     analysisResults()
   })
 }
+
 
 shinyApp(ui = ui, server = server)

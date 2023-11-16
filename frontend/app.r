@@ -5,6 +5,7 @@ options(shiny.maxRequestSize = 3000 * 1024^2)  # Increase file size limit
 # Load ncdb_recode.R and dtypes.r scripts
 source("/Users/collindougherty/Documents/Work/pipeline/backend/ncdb_recode.R")
 source("/Users/collindougherty/Documents/Work/pipeline/backend/dtypes.r")
+source("/Users/collindougherty/Documents/Work/pipeline/backend/random_forest.r")
 
 ui <- fluidPage(
   tags$head(
@@ -46,6 +47,10 @@ ui <- fluidPage(
     column(12, tableOutput("analysisResults"))
   )
 )
+
+#########################################################################
+
+
 server <- function(input, output, session) {
   reactiveDf <- reactiveVal()
   showDropdowns <- reactiveVal(FALSE)
@@ -125,18 +130,19 @@ server <- function(input, output, session) {
     }
   })
   
-  # Placeholder functions for analyses
-  random_forest <- function(x_vars, y_var, df) { return(data.frame(Result = "Random Forest")) }
-  linear_regression <- function(x_vars, y_var, df) { return(data.frame(Result = "Linear Regression")) }
-  k_means_clustering <- function(x_vars, df) { return(data.frame(Result = "K-Means Clustering")) }
+  
+  
   
   analysisResults <- reactiveVal()
   
   observeEvent(input$rfButton, {
     req(selectedDf(), input$x_vars, input$y_var)
-    results <- random_forest_fx(input$x_vars, input$y_var, selectedDf())
+    # Now you can call 'random_forest' with the current values of 'input$x_vars' and 'input$y_var'
+    results <- c(1,2,3,4)
+    # Do something with the results, like storing them in a reactive value
     analysisResults(results)
   })
+
   
   observeEvent(input$lrButton, {
     req(selectedDf(), input$x_vars, input$y_var)

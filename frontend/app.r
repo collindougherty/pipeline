@@ -134,7 +134,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$rfButton, {
     req(selectedDf(), input$x_vars, input$y_var)
-    results <- random_forest(input$x_vars, input$y_var, selectedDf())
+    results <- random_forest_fx(input$x_vars, input$y_var, selectedDf())
     analysisResults(results)
   })
   

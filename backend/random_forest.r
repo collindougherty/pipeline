@@ -153,4 +153,5 @@ confusion_matrix <- conf_mat(rfpred, y_var, .pred_class)
 performance_stats <- metrics(rfpred, y_var, .pred_class)
 #######################################################
 
+return(performance_stats)
 }

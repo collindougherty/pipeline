@@ -163,3 +163,7 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui = ui, server = server)
+
+
+
+rf_output <- random_forest_fx(input$x_vars, input$y_var, selectedDf())

@@ -89,7 +89,7 @@ server <- function(input, output, session) {
       recodedDf <- ncdb_recode(df)
       setProgress(value = 0.75)
       dtypes_data <- dtype(recodedDf)
-      ncdb_drop_ids(dtypes_data)
+      #ncdb_drop_ids(dtypes_data)
       reactiveDf(dtypes_data)
       setProgress(value = 1)
     })

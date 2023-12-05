@@ -13,43 +13,40 @@ ui <- fluidPage(
         dashboardHeader(),
         dashboardSidebar(),
         dashboardBody(
-            # Your existing UI components
-            tags$head(
-                tags$style(HTML("
-                    .centered-title {
-                        text-align: center;
-                        margin-top: 20px;
-                        margin-bottom: 20px;
-                    }
-                "))
-            ),
-            tags$div(class = "centered-title", 
-                     titlePanel("NCDB Data Analysis")
-            ),
 
             fluidRow(
                 column(4, offset = 4,
                        fileInput("file1", "Choose CSV File",
                                  accept = c("text/csv", 
                                             "text/comma-separated-values,text/plain", 
-                                            ".csv"))
-                )
-            ),
+                                            ".csv")))),
+
+            fluidRow(
+                column(5, uiOutput("choose_analysis_ui")),
+                # The dynamic filter UI will be added here
+                column(8, uiOutput("dynamicFilterUI"))),
+
+            fluidRow(
+                column(12, tableOutput("filterButton"))),
+
+            fluidRow(
+                column(12, tableOutput("filteredTable"))),
+
             fluidRow(
                 column(6, uiOutput("x_vars_ui")),
-                column(6, uiOutput("y_var_ui"))
-            ),
+                column(6, uiOutput("y_var_ui"))),
+
             fluidRow(
                 column(4, offset = 4,
-                       uiOutput("submit_ui"))
-            ),
+                       uiOutput("submit_ui"))),
+
             fluidRow(
                 column(12, tableOutput("table")),
                 column(12, textOutput("proceedMessage")),
                 column(4, uiOutput("rfButtonUI")),
                 column(4, uiOutput("lrButtonUI")),
-                column(4, uiOutput("kmButtonUI"))
-            ),
+                column(4, uiOutput("kmButtonUI"))),
+
             # fluidRow(
             #     column(12, tableOutput("analysisResults"))
             # ),
@@ -60,6 +57,15 @@ ui <- fluidPage(
             # Placeholder for the valueBox
             fluidRow(
               valueBoxOutput("rfValueBox")
+            ),
+            
+            # Placeholder for the valueBox
+            fluidRow(
+              valueBoxOutput("lrValueBox_acc")
+            ),
+            # Placeholder for the valueBox
+            fluidRow(
+              valueBoxOutput("lrValueBox")
             )
             
 )))
@@ -72,6 +78,7 @@ server <- function(input, output, session) {
   showDropdowns <- reactiveVal(FALSE)
   showButtons <- reactiveVal(FALSE)
   showAnalysisButtons <- reactiveVal(FALSE)
+  showSurvivalAnalysisButtons <- reactiveVal(FALSE)
   
   observeEvent(input$file1, {
     req(input$file1)
@@ -82,11 +89,158 @@ server <- function(input, output, session) {
       recodedDf <- ncdb_recode(df)
       setProgress(value = 0.75)
       dtypes_data <- dtype(recodedDf)
+      ncdb_drop_ids(dtypes_data)
       reactiveDf(dtypes_data)
       setProgress(value = 1)
     })
-    showDropdowns(TRUE)
   })
+
+  output$choose_analysis_ui <- renderUI({
+    if(!is.null(input$file1)) {
+      selectInput("choose_analysis", "Choose Analysis:", choices = c("Survival Analysis", "Predictive Modeling"))
+    }
+  })
+
+  observeEvent(input$choose_analysis, {
+    if(input$choose_analysis == "Survival Analysis") {
+      showDropdowns(FALSE)
+      showButtons(FALSE)
+      showAnalysisButtons(FALSE)
+      showSurvivalAnalysisButtons(TRUE)
+    } else if(input$choose_analysis == "Predictive Modeling") {
+      showDropdowns(TRUE)
+      showButtons(FALSE)
+      showAnalysisButtons(FALSE)
+      showSurvivalAnalysisButtons(FALSE)
+    }
+  })
+
+
+
+
+
+
+
+
+
+ # Dynamic filter UI
+  output$dynamicFilterUI <- renderUI({
+    if(showSurvivalAnalysisButtons()) {
+      fluidRow(
+        column(2, 
+          selectInput("filterType", "Control/Tx", 
+            choices = c('Control', 'Tx'))),
+        column(4, 
+          selectInput("variable", "Variable", 
+            choices = names(reactiveDf()))),
+        column(2, 
+          selectInput("comparison", "Comparison", 
+            choices = c('>', '<', '=='))),
+        #column(4, selectizeInput("value", "Value", choices = NULL)),
+        column(4, uiOutput("valueInput")),
+        actionButton("filterButton", "Apply Filter"))
+    }
+  })
+
+
+
+
+
+  observeEvent(input$variable, {
+    varSelected <- input$variable
+
+    if(is.factor(reactiveDf()[[varSelected]])) {
+      # Update comparison options for factor variables
+      updateSelectInput(session, "comparison", choices = c("==", "!="))
+
+      levels_subset <- levels(reactiveDf()[[varSelected]])
+      # Load a subset of levels if there are too many
+      if(length(levels_subset) > 1000) {
+        levels_subset <- levels_subset[1:1000]
+      }
+
+      output$valueInput <- renderUI({
+        selectizeInput("value", "Value", choices = levels_subset, multiple = TRUE,
+                       options = list(placeholder = "Type to search"))
+      })
+    } else if(is.numeric(reactiveDf()[[varSelected]])) {
+      # Update comparison options for numeric variables
+      updateSelectInput(session, "comparison", choices = c(">", "<", "=="))
+
+      # Render sliderInput for numeric variables
+      output$valueInput <- renderUI({
+        sliderInput("value", "Value", min = min(reactiveDf()[[varSelected]], na.rm = TRUE), 
+                    max = max(reactiveDf()[[varSelected]], na.rm = TRUE), 
+                    value = median(reactiveDf()[[varSelected]], na.rm = TRUE))
+      })
+    } else {
+      # Fallback UI for other types
+      output$valueInput <- renderUI({
+        textInput("value", "Value", value = "")
+      })
+    }
+  }, ignoreNULL = FALSE)
+
+
+  # Reactive expression to hold the filtered data
+  filteredData <- reactive({
+    # Make sure the dataframe is available and the inputs are set
+    req(reactiveDf(), input$variable, input$comparison, input$value)
+    df <- reactiveDf()
+    varSelected <- input$variable
+    comp <- input$comparison
+    val <- input$value
+
+    # Apply the filter based on the type of variable and the comparison selected
+    if(is.factor(df[[varSelected]])) {
+      if(comp == "==") {
+        df <- df[df[[varSelected]] %in% val, ]
+      } else if(comp == "!=") {
+        df <- df[!df[[varSelected]] %in% val, ]
+      }
+    } else if(is.numeric(df[[varSelected]])) {
+      if(comp == ">") {
+        df <- df[df[[varSelected]] > as.numeric(val), ]
+      } else if(comp == "<") {
+        df <- df[df[[varSelected]] < as.numeric(val), ]
+      } else if(comp == "==") {
+        df <- df[df[[varSelected]] == as.numeric(val), ]
+      }
+    }
+    df
+  })
+
+  # Display the filtered data
+  output$filteredTable <- renderTable({
+    # Render the table only when the filter button is clicked
+    # This prevents filtering with incomplete user inputs
+    input$filterButton
+    # This is necessary to isolate the button event from the reactive expression
+    isolate({
+      head(filteredData(), 10)
+    })
+  }, server = TRUE)  # Using server-side processing if the table is large
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
   output$x_vars_ui <- renderUI({
     if(showDropdowns()) {
@@ -197,9 +351,46 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$lrButton, {
-    req(selectedDf(), input$x_vars, input$y_var)
-    results <- linear_regression(input$x_vars, input$y_var, selectedDf())
+    # Show a progress bar
+    withProgress(message = 'Running linear regression model', value = 0, {
+      req(selectedDf(), input$x_vars, input$y_var)
+      results <- random_forest_fx(input$x_vars, input$y_var, selectedDf())
+      # Update progress bar after each step
+      for(i in 1:10) {
+        incProgress(1/10)
+        Sys.sleep(0.1)
+      }}) # This represents the time-consuming model fitting process
+    
+    
     analysisResults(results)
+    
+    # Render the valueBox in the server output
+    output$lrValueBox_acc <- renderValueBox({
+      req(analysisResults())  # Ensure analysisResults is available
+      # This is a placeholder, replace with your actual metric calculation
+      metric <- analysisResults()[[".estimate"]][analysisResults()[[".metric"]] == "accuracy"]
+      valueBox(
+        value = round(metric,2),
+        subtitle = "Accuracy",
+        icon = icon("area-chart"),
+        color = if(metric > .80) "green" else if(metric > .50) "yellow" else "red"
+      )
+    })
+    
+    # Render the valueBox in the server output
+    output$lrValueBox <- renderValueBox({
+      req(analysisResults())  # Ensure analysisResults is available
+      # This is a placeholder, replace with your actual metric calculation
+      metric <- analysisResults()[[".estimate"]][analysisResults()[[".metric"]] == "kap"]
+      valueBox(
+        value = round(metric,2),
+        subtitle = "Cohen's Kappa",
+        icon = icon("area-chart"),
+        color = if(metric > .80) "green" else if(metric > .50) "yellow" else "red"
+      )
+    })
+    
+    
   })
   
   observeEvent(input$kmButton, {

@@ -3069,7 +3069,11 @@ df$PHASE_III_RT_VOLUME <- factor(df$PHASE_III_RT_VOLUME,
 
 
 
-
+ncdb_drop_ids <- function(df) {
+  drop_variables <- sapply(df, function(col) length(levels(col)) > 100)
+  df <- df[, -which(drop_variables)]
+  return(df)
+}
 
 
 ncdb_rename <- function(df) {

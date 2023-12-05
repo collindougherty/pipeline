@@ -183,7 +183,7 @@ observeEvent(input$addFilter, {
 
     if(is.factor(reactiveDf()[[varSelected]])) {
       # Update comparison options for factor variables
-      updateSelectInput(session, "comparison", choices = c("==", "!="))
+      updateSelectInput(session, "comparison0", choices = c("==", "!="))
 
       levels_subset <- levels(reactiveDf()[[varSelected]])
       # Load a subset of levels if there are too many
@@ -192,23 +192,23 @@ observeEvent(input$addFilter, {
       }
 
       output$valueInput <- renderUI({
-        selectizeInput("value", "Value", choices = levels_subset, multiple = TRUE,
+        selectizeInput("value0", "Value", choices = levels_subset, multiple = TRUE,
                        options = list(placeholder = "Type to search"))
       })
     } else if(is.numeric(reactiveDf()[[varSelected]])) {
       # Update comparison options for numeric variables
-      updateSelectInput(session, "comparison", choices = c(">", "<", "=="))
+      updateSelectInput(session, "comparison0", choices = c(">", "<", "=="))
 
       # Render sliderInput for numeric variables
       output$valueInput <- renderUI({
-        sliderInput("value", "Value", min = min(reactiveDf()[[varSelected]], na.rm = TRUE), 
+        sliderInput("value0", "Value", min = min(reactiveDf()[[varSelected]], na.rm = TRUE), 
                     max = max(reactiveDf()[[varSelected]], na.rm = TRUE), 
                     value = median(reactiveDf()[[varSelected]], na.rm = TRUE))
       })
     } else {
       # Fallback UI for other types
       output$valueInput <- renderUI({
-        textInput("value", "Value", value = "")
+        textInput("value0", "Value", value = "")
       })
     }
   }, ignoreNULL = FALSE)
@@ -275,7 +275,7 @@ filteredData <- reactive({
   req(df)
 
   # Loop over all filters and apply them sequentially
-  for(i in 1:filterCounter()) {
+  for(i in 0:filterCounter()) {
     # Retrieve the inputs for the current filter
     varSelected <- input[[paste0("variable", i)]]
     comp <- input[[paste0("comparison", i)]]

@@ -22,12 +22,20 @@ ui <- fluidPage(
                                             ".csv")))),
 
             fluidRow(
-                column(5, uiOutput("choose_analysis_ui")),
-                # The dynamic filter UI will be added here
-                column(8, uiOutput("dynamicFilterUI"))),
+                column(5, uiOutput("choose_analysis_ui"))),
 
             fluidRow(
-                column(12, tableOutput("filterButton"))),
+                # The dynamic filter UI will be added here
+                column(12, uiOutput("dynamicFilterUI"))),
+
+            fluidRow(
+                column(12, div(id = "filterArea"))  # Area where new filters will be inserted
+            ),
+
+            fluidRow(
+                column(4, uiOutput("addFilter")),  # Placeholder for dynamic "Add Filter" button
+                column(4, uiOutput("filterButton"))  # Assuming this is another dynamic element
+            ),
 
             fluidRow(
                 column(12, tableOutput("filteredTable"))),
@@ -79,6 +87,9 @@ server <- function(input, output, session) {
   showButtons <- reactiveVal(FALSE)
   showAnalysisButtons <- reactiveVal(FALSE)
   showSurvivalAnalysisButtons <- reactiveVal(FALSE)
+  showAddFilter <- reactiveVal(FALSE)
+  showFilterButton <- reactiveVal(FALSE)
+  showFilteredTable <- reactiveVal(FALSE)
   
   observeEvent(input$file1, {
     req(input$file1)
@@ -115,39 +126,60 @@ server <- function(input, output, session) {
     }
   })
 
-
-
-
-
-
-
-
-
  # Dynamic filter UI
   output$dynamicFilterUI <- renderUI({
     if(showSurvivalAnalysisButtons()) {
       fluidRow(
-        column(2, 
-          selectInput("filterType", "Control/Tx", 
-            choices = c('Control', 'Tx'))),
-        column(4, 
-          selectInput("variable", "Variable", 
-            choices = names(reactiveDf()))),
-        column(2, 
-          selectInput("comparison", "Comparison", 
-            choices = c('>', '<', '=='))),
+        column(2, selectInput("filterType0", "Control/Tx", choices = c('Control', 'Tx'))),
+        column(4, selectInput("variable0", "Variable", choices = names(reactiveDf()))),
+        column(2, selectInput("comparison0", "Comparison", choices = c('>', '<', '=='))),
         #column(4, selectizeInput("value", "Value", choices = NULL)),
-        column(4, uiOutput("valueInput")),
-        actionButton("filterButton", "Apply Filter"))
+        column(3, uiOutput("valueInput0")))
     }
   })
 
+filterCounter <- reactiveVal(0)
+
+createFilterUI <- function(id) {
+  fluidRow(
+    id = paste0("filterRow", id),  # Assign an ID to the fluidRow for easy removal
+    column(2, selectInput(paste0("filterType", id), "Control/Tx", choices = c('Control', 'Tx'))),
+    column(4, selectInput(paste0("variable", id), "Variable", choices = names(reactiveDf()))),
+    column(2, selectInput(paste0("comparison", id), "Comparison", choices = c('>', '<', '=='))),
+    column(3, uiOutput(paste0("valueInput", id))),
+    column(1, actionButton(paste0("removeFilter", id), "X", class = "btn-danger"))
+  )
+}
+
+observeEvent(input$addFilter, {
+  currentFilterCount <- filterCounter()
+  filterCounter(currentFilterCount + 1)
+  insertUI("#filterArea", where = "beforeEnd", ui = createFilterUI(filterCounter()))
+})
 
 
 
+#############
+  observeEvent(input$value0, {
+      showAddFilter(TRUE)
+      showFilterButton(TRUE)
+    })
 
-  observeEvent(input$variable, {
-    varSelected <- input$variable
+    output$addFilter <- renderUI({
+      if(showAddFilter()) {
+        actionButton("addFilter", "Add Filter")
+      }
+    })
+
+    output$filterButton <- renderUI({
+      if(showFilterButton()) {
+        actionButton("filterButton", "Apply Filter(s)")
+      }
+    })
+
+
+  observeEvent(input$variable0, {
+    varSelected <- input$variable0
 
     if(is.factor(reactiveDf()[[varSelected]])) {
       # Update comparison options for factor variables
@@ -182,66 +214,112 @@ server <- function(input, output, session) {
   }, ignoreNULL = FALSE)
 
 
-  # Reactive expression to hold the filtered data
-  filteredData <- reactive({
-    # Make sure the dataframe is available and the inputs are set
-    req(reactiveDf(), input$variable, input$comparison, input$value)
-    df <- reactiveDf()
-    varSelected <- input$variable
-    comp <- input$comparison
-    val <- input$value
 
-    # Apply the filter based on the type of variable and the comparison selected
-    if(is.factor(df[[varSelected]])) {
-      if(comp == "==") {
-        df <- df[df[[varSelected]] %in% val, ]
-      } else if(comp == "!=") {
-        df <- df[!df[[varSelected]] %in% val, ]
-      }
-    } else if(is.numeric(df[[varSelected]])) {
-      if(comp == ">") {
-        df <- df[df[[varSelected]] > as.numeric(val), ]
-      } else if(comp == "<") {
-        df <- df[df[[varSelected]] < as.numeric(val), ]
-      } else if(comp == "==") {
-        df <- df[df[[varSelected]] == as.numeric(val), ]
+# Server logic to render the value input dynamically based on the selected variable
+observe({
+  lapply(1:filterCounter(), function(i) {
+    observeEvent(input[[paste0("variable", i)]], {
+      varSelected <- input[[paste0("variable", i)]]
+      req(varSelected, reactiveDf())
+
+      # Observer for the remove button of each filter
+      observeEvent(input[[paste0("removeFilter", i)]], {
+      # Use the ID of the fluidRow to remove the filter UI
+      removeUI(selector = paste0("#filterRow", i))
+      
+      # Update the filter counter by decrementing it
+      currentFilterCount <- filterCounter()
+      if (currentFilterCount > 0) {
+        filterCounter(currentFilterCount - 1)
+      }})
+      
+      # Output the UI for the value input based on the type of variable selected
+      output[[paste0("valueInput", i)]] <- renderUI({
+        if(is.factor(reactiveDf()[[varSelected]])) {
+          # Update comparison options for factor variables
+          updateSelectInput(session, paste0("comparison", i), choices = c("==", "!="))
+          
+          # Render selectizeInput for factor variables
+          selectizeInput(paste0("value", i), "Value", 
+                         choices = levels(reactiveDf()[[varSelected]]), 
+                         multiple = TRUE)
+        } else if(is.numeric(reactiveDf()[[varSelected]])) {
+          # Update comparison options for numeric variables
+          updateSelectInput(session, paste0("comparison", i), choices = c(">", "<", "=="))
+          
+          # Render sliderInput for numeric variables
+          sliderInput(paste0("value", i), "Value", 
+                      min = min(reactiveDf()[[varSelected]], na.rm = TRUE), 
+                      max = max(reactiveDf()[[varSelected]], na.rm = TRUE), 
+                      value = median(reactiveDf()[[varSelected]], na.rm = TRUE))
+        } else {
+          # Fallback UI for other types
+          textInput(paste0("value", i), "Value", value = "")
+        }
+      })
+    }, ignoreNULL = TRUE)
+  })
+})
+
+
+
+
+
+
+# Reactive expression to hold the filtered data
+filteredData <- reactive({
+  # Start with the unfiltered data
+  df <- reactiveDf()
+
+  # Ensure the reactive data frame is available
+  req(df)
+
+  # Loop over all filters and apply them sequentially
+  for(i in 1:filterCounter()) {
+    # Retrieve the inputs for the current filter
+    varSelected <- input[[paste0("variable", i)]]
+    comp <- input[[paste0("comparison", i)]]
+    val <- input[[paste0("value", i)]]
+
+    # Check if the inputs are not NULL
+    if (!is.null(varSelected) && !is.null(comp) && !is.null(val)) {
+      # Apply the filter based on the type of variable and the comparison selected
+      if (is.factor(df[[varSelected]])) {
+        if (comp == "==") {
+          df <- df[df[[varSelected]] %in% val, ]
+        } else if (comp == "!=") {
+          df <- df[!df[[varSelected]] %in% val, ]
+        }
+      } else if (is.numeric(df[[varSelected]])) {
+        val <- as.numeric(val)  # Convert value to numeric
+        if (comp == ">") {
+          df <- df[df[[varSelected]] > val, ]
+        } else if (comp == "<") {
+          df <- df[df[[varSelected]] < val, ]
+        } else if (comp == "==") {
+          df <- df[df[[varSelected]] == val, ]
+        }
       }
     }
-    df
-  })
+  }
 
-  # Display the filtered data
+  # Return the filtered dataset
+  df
+})
+
+
+
+observeEvent(input$filterButton, {
+  # Trigger re-rendering of the table with the current filtered data
   output$filteredTable <- renderTable({
-    # Render the table only when the filter button is clicked
-    # This prevents filtering with incomplete user inputs
-    input$filterButton
-    # This is necessary to isolate the button event from the reactive expression
+    # Using isolate to prevent reactivity from anything other than the filter button click
     isolate({
       head(filteredData(), 10)
     })
-  }, server = TRUE)  # Using server-side processing if the table is large
+  }, server = TRUE)
+})
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   output$x_vars_ui <- renderUI({
     if(showDropdowns()) {
       selectInput("x_vars", "Choose X Variables:", choices = names(reactiveDf()), multiple = TRUE)

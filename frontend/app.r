@@ -2,11 +2,13 @@
 library(shiny)
 library(shinydashboard)
 options(shiny.maxRequestSize = 3000 * 1024^2)  # Increase file size limit
+library(dplyr)
 
 # Load ncdb_recode.R and dtypes.r scripts
 source("/Users/collindougherty/Documents/Work/pipeline/backend/ncdb_recode.R")
 source("/Users/collindougherty/Documents/Work/pipeline/backend/dtypes.r")
 source("/Users/collindougherty/Documents/Work/pipeline/backend/random_forest_fx.r")
+source("/Users/collindougherty/Documents/Work/pipeline/backend/survival_analysis.r")
 
 ui <- fluidPage(
     dashboardPage(
@@ -34,7 +36,8 @@ ui <- fluidPage(
 
             fluidRow(
                 column(4, uiOutput("addFilter")),  # Placeholder for dynamic "Add Filter" button
-                column(4, uiOutput("filterButton"))  # Assuming this is another dynamic element
+                column(4, uiOutput("filterButton")),
+                column(4, uiOutput("survPlot")) # Assuming this is another dynamic element
             ),
 
             fluidRow(
@@ -74,7 +77,10 @@ ui <- fluidPage(
             # Placeholder for the valueBox
             fluidRow(
               valueBoxOutput("lrValueBox")
-            )
+            ),
+
+            # Output for the survival plot
+            plotOutput("survivalPlot")
             
 )))
 
@@ -90,6 +96,7 @@ server <- function(input, output, session) {
   showAddFilter <- reactiveVal(FALSE)
   showFilterButton <- reactiveVal(FALSE)
   showFilteredTable <- reactiveVal(FALSE)
+  showSurvButton <- reactiveVal(FALSE)
   
   observeEvent(input$file1, {
     req(input$file1)
@@ -163,6 +170,7 @@ observeEvent(input$addFilter, {
   observeEvent(input$value0, {
       showAddFilter(TRUE)
       showFilterButton(TRUE)
+      showSurvButton(TRUE)
     })
 
     output$addFilter <- renderUI({
@@ -174,6 +182,12 @@ observeEvent(input$addFilter, {
     output$filterButton <- renderUI({
       if(showFilterButton()) {
         actionButton("filterButton", "Apply Filter(s)")
+      }
+    })
+
+    output$survPlot <- renderUI({
+      if(showSurvButton()) {
+        actionButton("survPlot", "Plot Survival Curve")
       }
     })
 
@@ -236,13 +250,18 @@ observe({
       # Output the UI for the value input based on the type of variable selected
       output[[paste0("valueInput", i)]] <- renderUI({
         if(is.factor(reactiveDf()[[varSelected]])) {
+          levels_subset <- levels(reactiveDf()[[varSelected]])
+          # Load a subset of levels if there are too many
+            if(length(levels_subset) > 1000) {
+              levels_subset <- levels_subset[1:1000]
+            }
           # Update comparison options for factor variables
           updateSelectInput(session, paste0("comparison", i), choices = c("==", "!="))
           
           # Render selectizeInput for factor variables
           selectizeInput(paste0("value", i), "Value", 
-                         choices = levels(reactiveDf()[[varSelected]]), 
-                         multiple = TRUE)
+                         choices = levels_subset, multiple = TRUE,
+                         options = list(placeholder = "Type to search"))
         } else if(is.numeric(reactiveDf()[[varSelected]])) {
           # Update comparison options for numeric variables
           updateSelectInput(session, paste0("comparison", i), choices = c(">", "<", "=="))
@@ -270,9 +289,11 @@ observe({
 filteredData <- reactive({
   # Start with the unfiltered data
   df <- reactiveDf()
+  control <- df
+  treatment <- df
 
   # Ensure the reactive data frame is available
-  req(df)
+  req(df, control, treatment)
 
   # Loop over all filters and apply them sequentially
   for(i in 0:filterCounter()) {
@@ -280,43 +301,115 @@ filteredData <- reactive({
     varSelected <- input[[paste0("variable", i)]]
     comp <- input[[paste0("comparison", i)]]
     val <- input[[paste0("value", i)]]
+    group <- input[[paste0("filterType", i)]]
 
     # Check if the inputs are not NULL
-    if (!is.null(varSelected) && !is.null(comp) && !is.null(val)) {
+    if (!is.null(varSelected) && !is.null(comp) && !is.null(val) && group == "Control") {
       # Apply the filter based on the type of variable and the comparison selected
-      if (is.factor(df[[varSelected]])) {
+      if (is.factor(control[[varSelected]])) {
         if (comp == "==") {
-          df <- df[df[[varSelected]] %in% val, ]
+          control <- control[control[[varSelected]] %in% val, ]
         } else if (comp == "!=") {
-          df <- df[!df[[varSelected]] %in% val, ]
+          control <- control[!control[[varSelected]] %in% val, ]
         }
-      } else if (is.numeric(df[[varSelected]])) {
+      } else if (is.numeric(control[[varSelected]])) {
         val <- as.numeric(val)  # Convert value to numeric
         if (comp == ">") {
-          df <- df[df[[varSelected]] > val, ]
+          control <- control[control[[varSelected]] > val, ]
         } else if (comp == "<") {
-          df <- df[df[[varSelected]] < val, ]
+          control <- control[control[[varSelected]] < val, ]
         } else if (comp == "==") {
-          df <- df[df[[varSelected]] == val, ]
+          control <- control[control[[varSelected]] == val, ]
+        }
+      }
+    }
+    else if (!is.null(varSelected) && !is.null(comp) && !is.null(val) && group == "Tx") {
+      # Apply the filter based on the type of variable and the comparison selected
+      if (is.factor(treatment[[varSelected]])) {
+        if (comp == "==") {
+          treatment <- treatment[treatment[[varSelected]] %in% val, ]
+        } else if (comp == "!=") {
+          treatment <- treatment[!treatment[[varSelected]] %in% val, ]
+        }
+      } else if (is.numeric(treatment[[varSelected]])) {
+        val <- as.numeric(val)  # Convert value to numeric
+        if (comp == ">") {
+          treatment <- treatment[treatment[[varSelected]] > val, ]
+        } else if (comp == "<") {
+          treatment <- treatment[treatment[[varSelected]] < val, ]
+        } else if (comp == "==") {
+          treatment <- treatment[treatment[[varSelected]] == val, ]
         }
       }
     }
   }
 
-  # Return the filtered dataset
-  df
+  # lastly join the two dataframes row-wise into df
+  # Combine dataframes with bind_rows and remove duplicate rows
+  combined_df <- bind_rows(control, treatment) %>%
+    distinct()
+
+  # Return all 3 filtered data frames
+  # Return all filtered data frames as a list
+  list(control = control, treatment = treatment, combined = combined_df)
 })
 
 
+# # Reactive expression to hold the filtered data
+# filteredData <- reactive({
+#   # Start with the unfiltered data
+#   df <- reactiveDf()
+
+#   # Ensure the reactive data frame is available
+#   req(df)
+
+#   # Loop over all filters and apply them sequentially
+#   for(i in 0:filterCounter()) {
+#     # Retrieve the inputs for the current filter
+#     varSelected <- input[[paste0("variable", i)]]
+#     comp <- input[[paste0("comparison", i)]]
+#     val <- input[[paste0("value", i)]]
+
+#     # Check if the inputs are not NULL
+#     if (!is.null(varSelected) && !is.null(comp) && !is.null(val)) {
+#       # Apply the filter based on the type of variable and the comparison selected
+#       if (is.factor(df[[varSelected]])) {
+#         if (comp == "==") {
+#           df <- df[df[[varSelected]] %in% val, ]
+#         } else if (comp == "!=") {
+#           df <- df[!df[[varSelected]] %in% val, ]
+#         }
+#       } else if (is.numeric(df[[varSelected]])) {
+#         val <- as.numeric(val)  # Convert value to numeric
+#         if (comp == ">") {
+#           df <- df[df[[varSelected]] > val, ]
+#         } else if (comp == "<") {
+#           df <- df[df[[varSelected]] < val, ]
+#         } else if (comp == "==") {
+#           df <- df[df[[varSelected]] == val, ]
+#         }
+#       }
+#     }
+#   }
+# }
+# )
 
 observeEvent(input$filterButton, {
   # Trigger re-rendering of the table with the current filtered data
   output$filteredTable <- renderTable({
     # Using isolate to prevent reactivity from anything other than the filter button click
     isolate({
-      head(filteredData(), 10)
+      head(filteredData()$combined, 10)
     })
   }, server = TRUE)
+})
+
+
+observeEvent(input$survPlot, {
+  p <- survival_analysis_fx(control = filteredData()$control, treatment = filteredData()$treatment, "DX_LASTCONTACT_DEATH_MONTHS", "PUF_VITAL_STATUS_RECODE")
+  output$survivalPlot <- renderPlot({
+    p
+  })
 })
 
 

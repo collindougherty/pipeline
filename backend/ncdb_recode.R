@@ -3041,14 +3041,19 @@ df$PHASE_III_RT_VOLUME <- factor(df$PHASE_III_RT_VOLUME,
     ifelse(df$DX_LASTCONTACT_DEATH_MONTHS %in% c(9999), NA, df$DX_LASTCONTACT_DEATH_MONTHS)
   #########################################
 
+  #########################################
+  df$PUF_VITAL_STATUS_RECODE <-
+  # if 0, make 1; if 1 make 0
+    ifelse(df$PUF_VITAL_STATUS == 0, 1, 0)
+  #########################################
 
   #########################################
   df$PUF_VITAL_STATUS <-
     factor(
       df$PUF_VITAL_STATUS,
       levels = c(0, 1),
-      labels = c("Dead",
-                 "Alive")
+      labels = c("Alive",
+                 "Dead")
     )
   #########################################
 

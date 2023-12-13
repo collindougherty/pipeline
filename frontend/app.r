@@ -44,6 +44,9 @@ ui <- fluidPage(
                 column(12, tableOutput("filteredTable"))),
 
             fluidRow(
+                column(12, uiOutput("controlledVariables"))),
+
+            fluidRow(
                 column(6, uiOutput("x_vars_ui")),
                 column(6, uiOutput("y_var_ui"))),
 
@@ -355,45 +358,6 @@ filteredData <- reactive({
 })
 
 
-# # Reactive expression to hold the filtered data
-# filteredData <- reactive({
-#   # Start with the unfiltered data
-#   df <- reactiveDf()
-
-#   # Ensure the reactive data frame is available
-#   req(df)
-
-#   # Loop over all filters and apply them sequentially
-#   for(i in 0:filterCounter()) {
-#     # Retrieve the inputs for the current filter
-#     varSelected <- input[[paste0("variable", i)]]
-#     comp <- input[[paste0("comparison", i)]]
-#     val <- input[[paste0("value", i)]]
-
-#     # Check if the inputs are not NULL
-#     if (!is.null(varSelected) && !is.null(comp) && !is.null(val)) {
-#       # Apply the filter based on the type of variable and the comparison selected
-#       if (is.factor(df[[varSelected]])) {
-#         if (comp == "==") {
-#           df <- df[df[[varSelected]] %in% val, ]
-#         } else if (comp == "!=") {
-#           df <- df[!df[[varSelected]] %in% val, ]
-#         }
-#       } else if (is.numeric(df[[varSelected]])) {
-#         val <- as.numeric(val)  # Convert value to numeric
-#         if (comp == ">") {
-#           df <- df[df[[varSelected]] > val, ]
-#         } else if (comp == "<") {
-#           df <- df[df[[varSelected]] < val, ]
-#         } else if (comp == "==") {
-#           df <- df[df[[varSelected]] == val, ]
-#         }
-#       }
-#     }
-#   }
-# }
-# )
-
 observeEvent(input$filterButton, {
   # Trigger re-rendering of the table with the current filtered data
   output$filteredTable <- renderTable({
@@ -405,12 +369,58 @@ observeEvent(input$filterButton, {
 })
 
 
+  # Define the columns to exclude
+  excluded_cols <- c("DX_LASTCONTACT_DEATH_MONTHS", "PUF_VITAL_STATUS_RECODE") # Replace with your actual column names
+
+  output$controlledVariables <- renderUI({
+    if(showSurvButton()) {
+      # Get the list of variable names, excluding the survival-related ones
+      var_names <- setdiff(names(reactiveDf()), excluded_cols)
+
+      # Create a list of choices with 'Select All' option
+      choices_list <- c("Select All" = "all", var_names)
+
+      selectInput("controlled_vars", 
+                  "Choose Controlled Variables:", 
+                  choices = choices_list, 
+                  multiple = TRUE)
+    }
+  })
+
+  observeEvent(input$controlled_vars, {
+    if("all" %in% input$controlled_vars) {
+      # Update the input to select all variables
+      updateSelectInput(session, "controlled_vars", 
+                        selected = setdiff(names(reactiveDf()), excluded_cols))
+    }
+  })
+
+
 observeEvent(input$survPlot, {
-  p <- survival_analysis_fx(control = filteredData()$control, treatment = filteredData()$treatment, "DX_LASTCONTACT_DEATH_MONTHS", "PUF_VITAL_STATUS_RECODE")
+  # Get the user-selected controlled variables
+  controlled_vars <- input$controlled_vars
+
+  # Check if "all" is selected and adjust accordingly
+  if("all" %in% controlled_vars) {
+    controlled_vars <- setdiff(names(filteredData()$control), 
+                               c("DX_LASTCONTACT_DEATH_MONTHS", "PUF_VITAL_STATUS_RECODE"))
+  }
+
+  # Call the survival analysis function with controlled variables as additional arguments
+  p <- survival_analysis_fx(
+    control = filteredData()$control, 
+    treatment = filteredData()$treatment, 
+    time_col = "DX_LASTCONTACT_DEATH_MONTHS", 
+    status_col = "PUF_VITAL_STATUS_RECODE",
+    covariates = controlled_vars
+  )
+
+  # Render the survival plot
   output$survivalPlot <- renderPlot({
     p
   })
 })
+
 
 
   output$x_vars_ui <- renderUI({

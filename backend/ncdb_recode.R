@@ -3037,8 +3037,11 @@ df$PHASE_III_RT_VOLUME <- factor(df$PHASE_III_RT_VOLUME,
 
 
   #########################################
-  df$DX_LASTCONTACT_DEATH_MONTHS <-
-    ifelse(df$DX_LASTCONTACT_DEATH_MONTHS %in% c(9999), NA, df$DX_LASTCONTACT_DEATH_MONTHS)
+  # Replace '9999' with NA (ensure '9999' is treated as a character)
+  df$DX_LASTCONTACT_DEATH_MONTHS <- ifelse(df$DX_LASTCONTACT_DEATH_MONTHS == '9999', NA, df$DX_LASTCONTACT_DEATH_MONTHS)
+  
+  # Convert the column to numeric
+  df$DX_LASTCONTACT_DEATH_MONTHS <- as.numeric(df$DX_LASTCONTACT_DEATH_MONTHS)
   #########################################
 
   #########################################

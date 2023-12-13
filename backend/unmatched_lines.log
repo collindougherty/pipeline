@@ -1,0 +1,216 @@
+  df$PUF_FACILITY_ID <- as.factor(df$PUF_FACILITY_ID)
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+  factor(
+
+  factor(
+
+  factor(
+
+  factor(
+
+  factor(
+
+  factor(
+
+    factor(
+
+  #   factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(df$ANY_SURGERY,
+
+  df$JOINT_SURG_MARGINS <- factor(
+
+    factor(
+
+    factor(
+
+  # df$PHASE_I_RT_TRIAL <- factor(df$PHASE_I_RT_TRIAL,
+
+    factor(
+
+  #   factor(
+
+    factor(df$PHASE_I_BEAM_TECH,
+
+  df$PHASE_II_RT_VOLUME <- factor(df$PHASE_II_RT_VOLUME, 
+
+    factor(
+
+    factor(
+
+  df$PHASE_II_BEAM_TECH <- factor(df$PHASE_II_BEAM_TECH,
+
+df$PHASE_III_RT_VOLUME <- factor(df$PHASE_III_RT_VOLUME, 
+
+    factor(
+
+    factor(
+
+  df$PHASE_III_BEAM_TECH <- factor(df$PHASE_III_BEAM_TECH,
+
+  factor(
+
+  # factor(
+
+    factor(
+
+  factor(
+
+    factor(
+
+  factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+
+    factor(
+

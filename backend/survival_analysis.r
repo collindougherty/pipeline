@@ -1,87 +1,69 @@
 library(survival)
 library(survminer)
 library(ggplot2)
+library(dplyr)
 
 # Define the survival analysis function
-survival_analysis_fx <- function(control, treatment, time_col, status_col) {
-  # Ensure that the necessary columns exist in both dataframes
-  if (!(time_col %in% names(control)) || !(status_col %in% names(control))) {
-    stop("The time or status column does not exist in the control dataset.")
-  }
-  
-  if (!(time_col %in% names(treatment)) || !(status_col %in% names(treatment))) {
-    stop("The time or status column does not exist in the treatment dataset.")
-  }
+survival_analysis_fx <- function(control, treatment, time_col, status_col, covariates = NULL) {
+    # Combine control and treatment dataframes with a group column
+    combined_df <- bind_rows(
+        control %>% mutate(Group = 'Control'),
+        treatment %>% mutate(Group = 'Treatment')
+    )
 
-#   # Create the survival objects for control and treatment
-#   control_surv <- Surv(time = control[[time_col]], event = control[[status_col]])
-#   treatment_surv <- Surv(time = treatment[[time_col]], event = treatment[[status_col]])
-  
-#   # Fit survival curves using Cox proportional hazards model
-#   control_fit <- survfit(control_surv ~ 1)
-#   treatment_fit <- survfit(treatment_surv ~ 1)
-  
-#   # Create separate ggsurvplot objects for each group
-#   control_plot <- ggsurvplot(
-#     control_fit,
-#     data = control,
-#     conf.int = TRUE,
-#     pval = TRUE,
-#     risk.table = TRUE,
-#     ggtheme = theme_minimal(),
-#     palette = "blue"
-#   )
-  
-#   treatment_plot <- ggsurvplot(
-#     treatment_fit,
-#     data = treatment,
-#     conf.int = TRUE,
-#     pval = TRUE,
-#     risk.table = TRUE,
-#     ggtheme = theme_minimal(),
-#     palette = "red"
-#   )
+    print(unique(combined_df$Group))
+    
+    # Ensure the necessary columns exist
+    required_cols <- c(time_col, status_col, covariates)
+    if (!all(required_cols %in% names(combined_df))) {
+        stop("One or more specified columns do not exist in the dataset.")
+    }
+    
+    combined_df$Group <- factor(combined_df$Group, levels = c("Control", "Treatment"))
 
-#   # Combine plots using ggplot2 functions
-#   combined_plot <- ggplot() +
-#     geom_line(data = control_plot$survplot$data, aes(x = time, y = surv, color = "Control")) +
-#     geom_line(data = treatment_plot$survplot$data, aes(x = time, y = surv, color = "Treatment")) +
-#     scale_color_manual(values = c("Control" = "blue", "Treatment" = "red")) +
-#     labs(color = "Group") +
-#     control_plot$theme +
-#     theme(legend.title = element_blank())
+    # Let's make a formula for the cox model that includes the covariates
+    if (!is.null(covariates) && length(covariates) > 0) {
+        covariate_string <- paste(covariates, collapse = " + ")
+        cox_formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ strata(Group) + ", covariate_string))
+    } else {
+        cox_formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ strata(Group)"))
+    }
 
-#   if (control_plot$pval.coord != NULL && treatment_plot$pval.coord != NULL) {
-#     combined_plot <- combined_plot + 
-#       annotate("text", x = control_plot$pval.coord$x, y = control_plot$pval.coord$y, label = paste0("p = ", signif(control_plot$pval.text, digits = 2)), size = 3.5, color = "blue") +
-#       annotate("text", x = treatment_plot$pval.coord$x, y = treatment_plot$pval.coord$y, label = paste0("p = ", signif(treatment_plot$pval.text, digits = 2)), size = 3.5, color = "red")
-#   }
 
-#   # Return the combined plot object
-#   return(combined_plot)
+    print(cox_formula)
 
-  # Create the survival objects for control and treatment
-  control_surv <- Surv(time = control[[time_col]], event = control[[status_col]])
-  treatment_surv <- Surv(time = treatment[[time_col]], event = treatment[[status_col]])
-  
-  # Fit survival curves using Cox proportional hazards model
-  control_fit <- survfit(control_surv ~ 1)
-  treatment_fit <- survfit(treatment_surv ~ 1)
+    # Fit Cox proportional hazards model
+    #cox_fit <- coxph(Surv(combined_df[[time_col]], combined_df[[status_col]]) ~ strata(Group), data = combined_df)
+    cox_fit <- coxph(cox_formula, data = combined_df)
+    print("Cox fit success")
 
-  # Combine the survival fits into a data frame for plotting
-  surv_fits <- list(control = control_fit, treatment = treatment_fit)
-  
-  # Create a combined plot
-  p <- ggsurvplot_combine(
-    surv_fits,
-    palette = c("blue", "red"),
-    conf.int = TRUE,
-    pval = TRUE,
-    risk.table = TRUE,
-    legend.title = "Groups",
-    legend.labs = c("Control", "Treatment")
-  )
-  
-  # Return the plot object
-  return(p)
+    print(summary(cox_fit))
+
+    # Generate survival curves with stratification by 'Group'
+    surv_fit <- survfit(cox_fit)
+    print("Surv fit success")
+
+    print(str(surv_fit))
+    print("print str surv_fit successful")
+
+    print(surv_fit$strata)
+    print("prints successful")
+
+    print("on to plotting")
+    
+    p <- ggsurvplot(
+        surv_fit, 
+        data = combined_df,
+        #pval = TRUE, #this line breaks the code for some reason
+        conf.int = TRUE,
+        risk.table = TRUE,
+        ggtheme = theme_minimal(),
+        legend.title = "Group",
+        legend.labs = c("Control", "Treatment"),
+        palette = c("blue", "red")
+        )
+
+    print("plotting successful")
+
+    return(p)
 }

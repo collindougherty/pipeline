@@ -1502,6 +1502,18 @@ df$HISTOLOGY
 
 
   #########################################
+  df <- df %>%
+    mutate(
+      TUMOR_SIZE_mod = case_when(
+        !is.na(TUMOR_SIZE) ~ TUMOR_SIZE,  # Use TUMOR_SIZE if it's not NA
+        !is.na(TUMOR_SIZE_SUMMARY_2016) ~ TUMOR_SIZE_SUMMARY_2016,  # Else use TUMOR_SIZE_SUMMARY_2016 if it's not NA
+        TRUE ~ NA_real_  # If both are NA, the result is NA
+      )
+    )
+  #########################################
+
+
+  #########################################
   df$AJCC_TNM_CLIN_T
   #########################################
 

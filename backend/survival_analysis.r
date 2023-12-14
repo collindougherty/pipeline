@@ -23,17 +23,20 @@ survival_analysis_fx <- function(control, treatment, time_col, status_col, covar
     removed_covariates <- c()
     # print which columns were removed and why
     for (col in colnames(combined_df)[colMeans(is.na(combined_df)) > 0.10]) {
-        if (col %in% covariates) {
+        if (col != time_col && col != status_col && col %in% covariates) {
             print(paste0(col, " removed due to >10% missing data"))
             # remove the covariate from the covariates list
             covariates <- covariates[!covariates %in% col]
             # we also need to add this to a list of removed covariates that can be returned
             removed_covariates <- c(removed_covariates, col)
-    }
+        }
     }
 
-    # lets ignore any covariates with >10% missing data, remove from dataframe
-    combined_df <- combined_df[, colMeans(is.na(combined_df)) < 0.90]
+    # Adjusting dataframe filtering, ensuring time_col and status_col are always included
+    # required_cols <- c(time_col, status_col)
+    # filtered_cols <- colnames(combined_df)[colMeans(is.na(combined_df)) < 0.80 | colnames(combined_df) %in% required_cols]
+    # combined_df <- combined_df[, filtered_cols]
+
 
     # Let's make a formula for the cox model that includes the covariates
     if (!is.null(covariates) && length(covariates) > 0) {
@@ -66,7 +69,12 @@ survival_analysis_fx <- function(control, treatment, time_col, status_col, covar
         legend.title = "Group",
         legend.labs = c("Control", "Treatment"),
         palette = c("blue", "red")
-        )
+    )
+
+    # Then modify it with ggplot2 functions
+    p$plot <- p$plot +
+    labs(x = "Time (in Months)", y = "Survival Probability") +
+    ylim(min(surv_fit$surv), max(surv_fit$surv))
 
     return(list(p = p, removed_covariates = removed_covariates, cox_summary = cox_summary, cox_formula = cox_formula, strata = strata))
 }

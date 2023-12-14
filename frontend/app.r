@@ -367,6 +367,10 @@ filteredData <- reactive({
     }
   }
 
+  # drop all rows in control and treatment that are entirely NA
+  control <- control[rowSums(is.na(control)) != ncol(control), ]
+  treatment <- treatment[rowSums(is.na(treatment)) != ncol(treatment), ]
+
   # lastly join the two dataframes row-wise into df
   # Combine dataframes with bind_rows and remove duplicate rows
   combined_df <- bind_rows(control, treatment) %>%
@@ -470,24 +474,17 @@ output$coxSummaryTable <- renderDataTable({
   # Include the row names (variable names) as the first column of the data frame
   summary_df <- data.frame(
     #Estimate = coefs_matrix[, "coef"],
-    expEstimate = coefs_matrix[, "exp(coef)"],
+    HazardRatio = coefs_matrix[, "exp(coef)"],
     #StdErr = coefs_matrix[, "se(coef)"],
     #ZValue = coefs_matrix[, "z"],
-    PValue = coefs_matrix[, "Pr(>|z|)"]
+    pValue = coefs_matrix[, "Pr(>|z|)"]
   )
 
   # lets round the values to 2 decimal places
   summary_df <- round(summary_df, 2)
   
-  # Define column names for the DataTable to display
-  colnames(summary_df) <- c(#"Estimate", 
-                            "exp(Estimate)", 
-                            #"Std. Error", 
-                            #"Z value", 
-                            "P-value")
-  
   # Render the summary as a DataTable
-  datatable(summary_df, options = list(pageLength = 5, scrollX = TRUE, autoWidth = TRUE))
+  datatable(summary_df, options = list(pageLength = 5, scrollX = FALSE, autoWidth = TRUE))
 })
 })
 

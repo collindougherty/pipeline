@@ -1,0 +1,65 @@
+
+```{r}
+# Load necessary libraries
+library(survival)
+library(survminer)
+
+# Simulate some cardiovascular data
+set.seed(123) # for reproducibility
+sample_size <- 100
+data <- data.frame(
+  age = rnorm(sample_size, 50, 10),
+  cholesterol = rnorm(sample_size, 200, 50),
+  systolic_bp = rnorm(sample_size, 120, 15),
+  treatment = sample(c('A', 'B'), sample_size, replace = TRUE),
+  time_to_event = rexp(sample_size, rate = 0.1),
+  status = sample(0:1, sample_size, replace = TRUE)
+)
+
+# Fit a Cox proportional hazards model
+cox_fit <- coxph(Surv(time_to_event, status) ~ age + cholesterol + systolic_bp + treatment, data = data)
+
+# Summarize the coxph fit
+cox_summary <- summary(cox_fit)
+
+# Print the summary to the console
+print(cox_summary)
+
+# Visualize the results
+# Plotting the coefficients
+# plot(cox_fit)
+
+# Creating a ggplot2-based visual representation of the survival curves
+#ggsurvplot(survfit(cox_fit), data = data, pval = TRUE, conf.int = TRUE)
+
+# Analyzing the summary
+# Extract the coefficients, their significance, and proportional hazards assumption tests
+coefficients_summary <- cox_summary$coefficients
+p_values <- cox_summary$sctest$p
+proportional_hazards_test <- cox.zph(cox_fit)
+
+# Print out the results
+cat("Cox Model Coefficients:\n")
+print(coefficients_summary)
+cat("\nSignificance of the model coefficients (p-values):\n")
+print(p_values)
+cat("\nTest of Proportional Hazards assumption:\n")
+print(proportional_hazards_test)
+
+# Checking if any coefficient is not significant at the 0.05 level
+insignificant_coeffs <- coefficients_summary[, "Pr(>|z|)"] > 0.05
+if(any(insignificant_coeffs)){
+  cat("\nVariables with p-value > 0.05, which may not be significant predictors:\n")
+  print(names(data)[which(insignificant_coeffs)])
+}
+
+# Create a dataframe for the coefficients for easy viewing or exporting
+coefficients_df <- as.data.frame(coefficients_summary)
+
+# Create a Kaplan-Meier plot
+surv_object <- Surv(data$time_to_event, data$status)
+kap_meier_fit <- survfit(surv_object ~ treatment, data = data)
+ggsurvplot(kap_meier_fit, data = data, pval = TRUE)
+
+# To run this script, just paste it into an R script file or R console.
+```

@@ -1493,6 +1493,11 @@ df$HISTOLOGY
   df$TUMOR_SIZE_SUMMARY_2016[df$TUMOR_SIZE_SUMMARY_2016 == 999] <- NA
   df$TUMOR_SIZE_SUMMARY_2016[df$TUMOR_SIZE_SUMMARY_2016 == 998] <- NA
   df$TUMOR_SIZE_SUMMARY_2016[df$TUMOR_SIZE_SUMMARY_2016 == 990] <- NA
+
+  # if its "0-1" (the charater), then make it 0.5
+  df$TUMOR_SIZE_SUMMARY_2016[df$TUMOR_SIZE_SUMMARY_2016 == "0-1"] <- 0.5
+  # make it numeric
+  df$TUMOR_SIZE_SUMMARY_2016 <- as.numeric(df$TUMOR_SIZE_SUMMARY_2016)
   #########################################
 
 

@@ -10,8 +10,6 @@ survival_analysis_fx <- function(control, treatment, time_col, status_col, covar
         control %>% mutate(Group = 'Control'),
         treatment %>% mutate(Group = 'Treatment')
     )
-
-    print(unique(combined_df$Group))
     
     # Ensure the necessary columns exist
     required_cols <- c(time_col, status_col, covariates)
@@ -21,6 +19,22 @@ survival_analysis_fx <- function(control, treatment, time_col, status_col, covar
     
     combined_df$Group <- factor(combined_df$Group, levels = c("Control", "Treatment"))
 
+
+    removed_covariates <- c()
+    # print which columns were removed and why
+    for (col in colnames(combined_df)[colMeans(is.na(combined_df)) > 0.10]) {
+        if (col %in% covariates) {
+            print(paste0(col, " removed due to >10% missing data"))
+            # remove the covariate from the covariates list
+            covariates <- covariates[!covariates %in% col]
+            # we also need to add this to a list of removed covariates that can be returned
+            removed_covariates <- c(removed_covariates, col)
+    }
+    }
+
+    # lets ignore any covariates with >10% missing data, remove from dataframe
+    combined_df <- combined_df[, colMeans(is.na(combined_df)) < 0.90]
+
     # Let's make a formula for the cox model that includes the covariates
     if (!is.null(covariates) && length(covariates) > 0) {
         covariate_string <- paste(covariates, collapse = " + ")
@@ -29,27 +43,18 @@ survival_analysis_fx <- function(control, treatment, time_col, status_col, covar
         cox_formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ strata(Group)"))
     }
 
-
-    print(cox_formula)
-
     # Fit Cox proportional hazards model
     #cox_fit <- coxph(Surv(combined_df[[time_col]], combined_df[[status_col]]) ~ strata(Group), data = combined_df)
     cox_fit <- coxph(cox_formula, data = combined_df)
-    print("Cox fit success")
 
-    print(summary(cox_fit))
+    cox_summary <- summary(cox_fit)
 
     # Generate survival curves with stratification by 'Group'
     surv_fit <- survfit(cox_fit)
-    print("Surv fit success")
 
-    print(str(surv_fit))
-    print("print str surv_fit successful")
+    #print(str(surv_fit))
 
-    print(surv_fit$strata)
-    print("prints successful")
-
-    print("on to plotting")
+    strata <- surv_fit$strata
     
     p <- ggsurvplot(
         surv_fit, 
@@ -63,7 +68,5 @@ survival_analysis_fx <- function(control, treatment, time_col, status_col, covar
         palette = c("blue", "red")
         )
 
-    print("plotting successful")
-
-    return(p)
+    return(list(p = p, removed_covariates = removed_covariates, cox_summary = cox_summary, cox_formula = cox_formula, strata = strata))
 }

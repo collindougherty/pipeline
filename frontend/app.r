@@ -3,6 +3,8 @@ library(shiny)
 library(shinydashboard)
 options(shiny.maxRequestSize = 3000 * 1024^2)  # Increase file size limit
 library(dplyr)
+library(DT)
+library(data.table)
 
 # Load ncdb_recode.R and dtypes.r scripts
 source("/Users/collindougherty/Documents/Work/pipeline/backend/ncdb_recode.R")
@@ -11,6 +13,13 @@ source("/Users/collindougherty/Documents/Work/pipeline/backend/random_forest_fx.
 source("/Users/collindougherty/Documents/Work/pipeline/backend/survival_analysis.r")
 
 ui <- fluidPage(
+  tags$head(
+  tags$style(HTML("
+    .warning-text {
+      color: red;
+    }
+  "))
+),
     dashboardPage(
         dashboardHeader(),
         dashboardSidebar(),
@@ -82,8 +91,18 @@ ui <- fluidPage(
               valueBoxOutput("lrValueBox")
             ),
 
+            # Output for the removed covariates
+            fluidRow(
+              column(12, uiOutput("removedCovariates"))
+            ),
+
             # Output for the survival plot
-            plotOutput("survivalPlot")
+            plotOutput("survivalPlot"),
+
+            # Output for the cox summary table
+            fluidRow(
+              column(12, dataTableOutput("coxSummaryTable"))
+            )
             
 )))
 
@@ -100,12 +119,13 @@ server <- function(input, output, session) {
   showFilterButton <- reactiveVal(FALSE)
   showFilteredTable <- reactiveVal(FALSE)
   showSurvButton <- reactiveVal(FALSE)
+  showWarning <- reactiveVal(FALSE)
   
   observeEvent(input$file1, {
     req(input$file1)
     withProgress(message = 'Processing data...', value = 0, {
       setProgress(value = 0.25)
-      df <- read.csv(input$file1$datapath)
+      df <- read.csv(input$file1$datapath, header = TRUE, sep = ",")
       setProgress(value = 0.50)
       recodedDf <- ncdb_recode(df)
       setProgress(value = 0.75)
@@ -395,8 +415,8 @@ observeEvent(input$filterButton, {
     }
   })
 
-
 observeEvent(input$survPlot, {
+  removed_covariates <- c()
   # Get the user-selected controlled variables
   controlled_vars <- input$controlled_vars
 
@@ -407,7 +427,7 @@ observeEvent(input$survPlot, {
   }
 
   # Call the survival analysis function with controlled variables as additional arguments
-  p <- survival_analysis_fx(
+  function_output_surv <- survival_analysis_fx(
     control = filteredData()$control, 
     treatment = filteredData()$treatment, 
     time_col = "DX_LASTCONTACT_DEATH_MONTHS", 
@@ -415,10 +435,60 @@ observeEvent(input$survPlot, {
     covariates = controlled_vars
   )
 
+  p <- function_output_surv$p
+  removed_covariates <- function_output_surv$removed_covariates
+
+  # print the list of removed covariates in the console
+  if(length(removed_covariates) > 0) {
+    showWarning(TRUE)
+  }
+
   # Render the survival plot
   output$survivalPlot <- renderPlot({
     p
   })
+
+  # if removed_covariates is not empty, print the list of removed covariates in the UI
+  # Modify the renderText output
+  output$removedCovariates <- renderText({
+    if(length(removed_covariates) > 0) {
+      showWarning(TRUE)
+      HTML(paste('<span class="warning-text">The following covariates were removed due to >10% missing data:', 
+                 paste(removed_covariates, collapse = ", "), '</span>'))
+    } else {
+      ""
+    }
+  })
+
+  cox_fit_summary <- function_output_surv$cox_summary
+
+output$coxSummaryTable <- renderDataTable({
+  
+  # Extract the coefficients matrix from the coxph summary
+  coefs_matrix <- cox_fit_summary[["coefficients"]]
+  
+  # Include the row names (variable names) as the first column of the data frame
+  summary_df <- data.frame(
+    #Estimate = coefs_matrix[, "coef"],
+    expEstimate = coefs_matrix[, "exp(coef)"],
+    #StdErr = coefs_matrix[, "se(coef)"],
+    #ZValue = coefs_matrix[, "z"],
+    PValue = coefs_matrix[, "Pr(>|z|)"]
+  )
+
+  # lets round the values to 2 decimal places
+  summary_df <- round(summary_df, 2)
+  
+  # Define column names for the DataTable to display
+  colnames(summary_df) <- c(#"Estimate", 
+                            "exp(Estimate)", 
+                            #"Std. Error", 
+                            #"Z value", 
+                            "P-value")
+  
+  # Render the summary as a DataTable
+  datatable(summary_df, options = list(pageLength = 5, scrollX = TRUE, autoWidth = TRUE))
+})
 })
 
 

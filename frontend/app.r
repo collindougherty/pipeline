@@ -11,6 +11,7 @@ source("/Users/collindougherty/Documents/Work/pipeline/backend/ncdb_recode.R")
 source("/Users/collindougherty/Documents/Work/pipeline/backend/dtypes.r")
 source("/Users/collindougherty/Documents/Work/pipeline/backend/random_forest_fx.r")
 source("/Users/collindougherty/Documents/Work/pipeline/backend/survival_analysis.r")
+source("/Users/collindougherty/Documents/Work/pipeline/backend/survival_stepwise.r")
 
 ui <- fluidPage(
   tags$head(
@@ -414,7 +415,7 @@ observeEvent(input$filterButton, {
   observeEvent(input$controlled_vars, {
     if("all" %in% input$controlled_vars) {
       # Update the input to select all variables
-      updateSelectInput(session, "controlled_vars", 
+      updateSelectInput(session, "controlled_vars",
                         selected = setdiff(names(reactiveDf()), excluded_cols))
     }
   })

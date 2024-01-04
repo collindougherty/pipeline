@@ -583,6 +583,14 @@ df$HISTOLOGY
 
 
   #########################################
+  df$SLNB <-
+    #if is not NA or 0, 1, else 0
+    ifelse(!is.na(df$SLN_EXAM) & df$SLN_EXAM != 0, 1, 
+    ifelse(is.na(df$SLN_EXAM), NA, 0))
+  #########################################
+
+
+  #########################################
   df$SLN_POS <-
     ifelse(df$SLN_POS %in% c(95,97,98,99), NA, df$SLN_POS)
   #########################################
@@ -3068,9 +3076,9 @@ df$PHASE_III_RT_VOLUME <- factor(df$PHASE_III_RT_VOLUME,
   #########################################
 
   #########################################
-  df$PUF_VITAL_STATUS <-
+  df$PUF_VITAL_STATUS_RECODE <-
     factor(
-      df$PUF_VITAL_STATUS,
+      df$PUF_VITAL_STATUS_RECODE,
       levels = c(0, 1),
       labels = c("Alive",
                  "Dead")

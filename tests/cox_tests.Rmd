@@ -11,7 +11,18 @@ data <- data.frame(
   age = rnorm(sample_size, 50, 10),
   cholesterol = rnorm(sample_size, 200, 50),
   systolic_bp = rnorm(sample_size, 120, 15),
-  treatment = sample(c('A', 'B'), sample_size, replace = TRUE),
+  time_to_event = rexp(sample_size, rate = 0.1),
+  status = sample(0:1, sample_size, replace = TRUE),
+  sex = sample(0:1, sample_size, replace = TRUE)
+)
+
+data$sex <- as.factor(data$sex)
+data$status <- as.factor(data$status)
+
+data2 <- data.frame(
+  age = rnorm(sample_size, 50, 10),
+  cholesterol = rnorm(sample_size, 200, 50),
+  systolic_bp = rnorm(sample_size, 120, 15),
   time_to_event = rexp(sample_size, rate = 0.1),
   status = sample(0:1, sample_size, replace = TRUE)
 )
@@ -63,3 +74,340 @@ ggsurvplot(kap_meier_fit, data = data, pval = TRUE)
 
 # To run this script, just paste it into an R script file or R console.
 ```
+
+```{r}
+data <- read.csv('/Users/collindougherty/Downloads/Desmoplastic Melanoma.csv')
+```
+
+```{r}
+source('/Users/collindougherty/Documents/Work/pipeline/backend/survival_stepwise.r')
+```
+
+```{r}
+survival_analysis_stepwise_fx(data, data2, 'time_to_event', 'status')
+```
+
+```{r}
+head <- head(data, 100)
+write.csv(head, file = 'truncated.csv')
+```
+
+
+
+```{r}
+df <- read.csv("/Users/collindougherty/Documents/Work/pipeline/tests/test_full_recode_breast.csv")
+
+dtype <- function(df) {
+  # if variable type chr, then change to factor for all vars in df
+  df <- df %>% mutate_if(is.character, as.factor)
+  # lets remove all dtype logi columns from df (these are most likely columns not in data dictionary)
+  df <- df %>% select_if(function(x) !is.logical(x))
+  return(df)
+}
+
+library(tidyverse)
+data <- dtype(df)
+
+#df <- head(data,1000)
+df <- data
+
+# Specify the target variable
+target_name <- "SLNB"  # Replace with your target variable name
+
+# Remove rows with NA in the target variable
+df <- df[!is.na(df[[target_name]]), ]
+
+# Columns to be omitted
+columns_to_omit <- c("SLN_EXAM", "SLN_POS", "SLN_EXAM_notes", "SLN_POS_notes", "SENTINEL_LNBX_STARTED_DAY", "REGIONAL_NODES_EXAMINED", "REGIONAL_NODES_POSITIVE", "RX_SUMM_SCOPE_REG_LN_2012", "REG_LN_DISS_STARTED_DAY", 	
+"RX_SUMM_SCOPE_REG_LN_SUR", "AJCC_TNM_CLIN_N", "AJCC_TNM_PATH_N_SFX", "AJCC_TNM_PATH_STG_GRP")
+
+# Omit these columns from the dataframe
+df <- df[, !(names(df) %in% columns_to_omit)]
+
+df$SLNB <- as.factor(df$SLNB)
+```
+
+
+```{r}
+library(Matrix)
+
+# Assuming 'df' is your dataframe
+# Select categorical columns
+categorical_columns <- names(df)[sapply(df, is.factor) | sapply(df, is.character)]
+numeric_columns <- names(df)[sapply(df, is.numeric)]
+
+# Start with an empty sparse matrix
+combined_sparse_matrix <- NULL
+
+for (column in categorical_columns) {
+  # Add "Missing" as a level for factor variables
+  if(is.factor(df[[column]])) {
+    levels(df[[column]]) <- c(levels(df[[column]]), "Missing")
+  }
+
+  # Replace NA with "Missing"
+  df[[column]][is.na(df[[column]])] <- "Missing"
+
+  # Check if the number of levels (including 'Missing') is 20 or less
+  num_levels <- length(levels(factor(df[[column]])))
+  if (num_levels > 1 && num_levels <= 20) {
+    # Create dummy variables using model.matrix
+    dummies <- model.matrix(~ . - 1, data = df[column])
+
+    # Convert to sparse matrix
+    sparse_matrix <- as(Matrix(dummies, sparse = TRUE), "CsparseMatrix")
+
+    # Combine with the existing combined matrix
+    if (is.null(combined_sparse_matrix)) {
+      combined_sparse_matrix <- sparse_matrix
+    } else {
+      combined_sparse_matrix <- cbind(combined_sparse_matrix, sparse_matrix)
+    }
+  }
+}
+
+# Normalize or scale numeric columns
+df_scaled <- as.data.frame(lapply(df[numeric_columns], scale))
+
+# Convert scaled numeric data to a sparse matrix
+numeric_sparse_matrix <- as(Matrix(as.matrix(df_scaled), sparse = TRUE), "CsparseMatrix")
+
+# Combine numeric and categorical sparse matrices
+if (is.null(combined_sparse_matrix)) {
+  final_matrix <- numeric_sparse_matrix
+} else {
+  final_matrix <- cbind(combined_sparse_matrix, numeric_sparse_matrix)
+}
+
+# Final combined matrix for training
+#final_matrix <- as(combined_matrix, "CsparseMatrix")
+```
+
+
+```{r}
+library(xgboost)
+
+# Step 1: Specify the target variable
+target_name <- target_name  # Replace with the actual name of your target variable
+
+# Step 2: Extract labels and convert to numeric if it's a factor
+labels <- as.numeric(as.factor(df[[target_name]])) - 1
+
+# Step 3: Get levels of the target variable
+target_levels <- levels(factor(df[[target_name]]))
+
+# Check if target variable needs one-hot encoding
+if (all(df[[target_name]] %in% c(0, 1))) {
+  # If the target variable is not just 0s and 1s, proceed with one-hot encoding
+
+  # Step 4: Determine the names of the one-hot encoded columns in CSR
+  # This assumes that the one-hot encoding creates names like 'SEXM' and 'SEXF'
+  # Get levels including 'Missing' if there were NAs initially
+  target_levels <- levels(factor(df[[target_name]], exclude = NULL))
+  encoded_col_names <- paste0(target_name, target_levels)
+
+  # Step 5: Identify columns to omit from the dimnames of the final_matrix
+  column_names <- colnames(final_matrix)
+  columns_to_omit <- match(encoded_col_names, column_names)
+
+  # Step 6: Drop columns from feature_matrix
+  # Filter out any NA values that may have been returned by match in case of non-matches
+  columns_to_omit <- columns_to_omit[!is.na(columns_to_omit)]
+  # Remove the columns from the feature_matrix
+  if (length(columns_to_omit) > 0) {
+    feature_matrix <- final_matrix[, -columns_to_omit, drop = FALSE]
+  } else {
+    # If no columns to omit, use the original matrix
+    feature_matrix <- final_matrix
+    warning(paste("Target variable column", target_name, "not found in the CSR matrix."))
+  }
+} else {
+  # If target variable is already binary, use the matrix as is
+  feature_matrix <- final_matrix
+}
+
+# if (!is.null(columns_to_omit)) {
+#   feature_matrix <- final_matrix[, -columns_to_omit]
+# } else {
+#   feature_matrix <- final_matrix
+#   warning(paste("Target variable column", target_name, "not found in the CSR matrix."))
+# }
+
+# Now, you can proceed with splitting the feature_matrix into training and testing sets
+# and use it to train your XGBoost model.
+
+# Split data into training and testing sets
+set.seed(123)  # for reproducibility
+train_indices <- sample(seq_len(nrow(feature_matrix)), size = floor(0.8 * nrow(feature_matrix)))
+test_indices <- setdiff(seq_len(nrow(feature_matrix)), train_indices)
+
+train_features <- feature_matrix[train_indices, ]
+test_features <- feature_matrix[test_indices, ]
+train_labels <- labels[train_indices]
+test_labels <- labels[test_indices]
+
+# Define parameters
+params <- list(booster = "gbtree", objective = "binary:logistic")
+
+# Train the model
+xgb_model <- xgboost(params = params, data = train_features, label = train_labels, nrounds = 100)
+
+# Make predictions
+predictions <- predict(xgb_model, test_features)
+predicted_labels <- ifelse(predictions > 0.5, 1, 0)
+
+# Evaluate model performance
+accuracy <- sum(predicted_labels == test_labels) / length(test_labels)
+print(paste("Accuracy:", accuracy))
+```
+
+```{r}
+# Load necessary library for plotting
+library(ggplot2)
+
+# Plot feature importance
+importance_matrix <- xgb.importance(model = xgb_model)
+xgb.plot.importance(importance_matrix)
+```
+
+```{r}
+# Check and install 'caret' package if not already installed
+if (!require(caret, quietly = TRUE)) {
+  install.packages("caret")
+  library(caret)
+}
+
+# Check and install 'e1071' package if not already installed
+if (!require(e1071, quietly = TRUE)) {
+  install.packages("e1071")
+  library(e1071)
+}
+
+# Assuming predicted_labels and test_labels are already defined from the xgboost model
+
+# Make predictions
+predictions <- predict(xgb_model, test_features)
+predicted_labels <- ifelse(predictions > 0.5, 1, 0)
+
+# Create a confusion matrix
+conf_matrix <- confusionMatrix(as.factor(predicted_labels), as.factor(test_labels))
+
+# Print the confusion matrix
+print(conf_matrix$table)
+
+# Print overall accuracy from the confusion matrix
+print(paste("Accuracy:", conf_matrix$overall['Accuracy']))
+
+# Calculate and print the Kappa statistic
+kappa_stat <- conf_matrix$overall['Kappa']
+print(paste("Kappa Statistic:", kappa_stat))
+```
+
+```{r}
+library(haven)
+library(tidyverse)
+library(MatchIt)
+library(tidyr)
+
+matching_vars <- colnames(train_features)
+
+
+# omit na's in petgroup
+data <- data %>% drop_na(petgroup, sex, age, sizepath, path)
+data <- data %>% mutate(petgroup = ifelse(petgroup == 2, 0, 1))
+
+# Begin with logistic regression predicting petgroup from matching variables
+model <- glm(petgroup ~ sex + age + sizepath + path,
+             data = data, family = binomial)
+
+# Create a propensity score
+data$ps <- predict(model, type = "response")
+
+matching_method <- "nearest" # You can use other methods as well
+m.out <- matchit(petgroup ~ sex + age + sizepath + path,
+                 method = matching_method,
+                 data = data)
+
+# Getting the matched data
+matched_data <- match.data(m.out)
+
+# Check balance for each matching variable
+summary(m.out, standardize = TRUE)
+
+
+library(ggplot2)
+library(dplyr)
+
+# Reshape the matched data for faceted plotting
+long_matched_data <- matched_data %>%
+  gather(key = "Outcome", value = "Value", lnpos, lnsize, tstage, rtt, recurrence, reop, futg) %>%
+  filter(!is.na(Value))  # Assuming you want to remove NA values
+
+# Create faceted boxplots with enhanced aesthetics
+p <- ggplot(long_matched_data, aes(x = factor(petgroup), y = Value, fill = factor(petgroup))) +
+  geom_boxplot(width = 0.7) +  # Adjust boxplot width
+  facet_wrap(~ Outcome, scales = "free_y") +
+  labs(title = "Comparison of Outcomes by Group",
+       x = "Group",
+       y = "Measured Value",
+       fill = "Group Category") +
+  theme_minimal(base_size = 14) +  # Increase base font size
+  theme(plot.title = element_text(face = "bold", size = 16),  # Bold title with larger font
+        axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        strip.text = element_text(face = "bold")) +  # Bold facet labels
+  scale_fill_manual(values = c("#1f77b4", "#d62728"),  # Choose better colors
+                    labels = c("Control", "PET")) +
+  theme(panel.grid.major = element_line(colour = "grey80"),  # Add grid lines
+        panel.grid.minor = element_blank())
+
+p
+```
+
+
+
+
+
+
+
+```{r}
+# Load necessary libraries
+library(reticulate)
+library(keras)
+
+# Install TensorFlow
+# tensorflow::install_tensorflow()
+
+# Assuming 'feature_matrix' and 'labels' are prepared and ready for training
+# Splitting data into training and testing sets
+set.seed(123)
+indices <- sample(1:nrow(feature_matrix), size = floor(0.8 * nrow(feature_matrix)))
+x_train <- feature_matrix[indices, ]
+y_train <- labels[indices]
+x_test <- feature_matrix[-indices, ]
+y_test <- labels[-indices]
+
+# Define the model
+model <- keras_model_sequential() %>%
+  layer_dense(units = 64, activation = 'relu', input_shape = ncol(feature_matrix)) %>%
+  layer_dense(units = 64, activation = 'relu') %>%
+  layer_dense(units = 1, activation = 'sigmoid')
+
+# Compile the model
+model %>% compile(
+  loss = 'binary_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
+)
+
+# Fit the model
+history <- model %>% fit(
+  x_train, y_train,
+  epochs = 30,
+  batch_size = 128,
+  validation_split = 0.2
+)
+
+# Evaluate the model
+model %>% evaluate(x_test, y_test)
+```
+
